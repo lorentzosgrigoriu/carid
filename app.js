@@ -64,11 +64,37 @@ window.proceseazaCodScanat = function(textScanat) {
     }
     if (vinCurat.length === 17) {
         opresteScanner();
+        
+        // Dacă este proprietar, îl întrebăm ce dorește să facă înainte de afișare
+        if (esteProprietarMod) {
+            let vreaSalvare = confirm(`🚗 Vehicul detectat (${vinCurat})!\n\nDorești să SALVEZI această mașină în Garajul tău pentru acces rapid?\n\n[OK = Salvează în Garaj / Cancel = Doar Vizualizare Temporară]`);
+            
+            if (vreaSalvare) {
+                salveazaInGarajLocal(vinCurat);
+            }
+        }
+        
         deschideDetalii(vinCurat);
     } else {
         alert("Codul QR nu conține un VIN valid de 17 caractere!");
     }
 };
+
+// Funcție pentru salvarea locală a vehiculului în listă (Garajul meu)
+function salveazaInGarajLocal(vin) {
+    try {
+        let garaj = JSON.parse(localStorage.getItem('garaj_carid')) || [];
+        if (!garaj.includes(vin)) {
+            garaj.push(vin);
+            localStorage.setItem('garaj_carid', JSON.stringify(garaj));
+            alert("Vehiculul a fost salvat cu succes în Garajul tău!");
+        } else {
+            alert("Vehiculul existat deja în Garajul tău.");
+        }
+    } catch (e) {
+        console.error("Eroare salvare localStorage", e);
+    }
+}
 
 // DESCHIDERE FIȘĂ VEHICUL & LOGICĂ PIN (PinActivity.kt + DetaliiMasinaActivity.kt)
 function deschideDetalii(vin) {
@@ -208,10 +234,11 @@ window.deschideMeniuActiuni = function() {
     document.getElementById('optiuni-proprietar-web').style.display = esteProprietarMod ? 'block' : 'none';
     document.getElementById('optiuni-mecanic-web').style.display = esteProprietarMod ? 'none' : 'block';
 };
-window.inchideMeniuActiuni = function() {
+window.lockMeniuActiuni = function() {
     document.getElementById('actionSheetMenu').style.display = 'none';
     document.getElementById('actionMenuOverlay').style.display = 'none';
 };
+window.inchideMeniuActiuni = window.lockMeniuActiuni;
 
 window.afiseazaStatusDocument = function(tip) {
     inchideMeniuActiuni();
@@ -256,21 +283,29 @@ window.genereazaCodQRWeb = function() {
     vinCurentQR = vin;
     set(ref(db, `Masini/${vin}/pin`), pin).then(() => {
         const tempDiv = document.createElement("div");
-        new QRCode(tempDiv, { text: `VIN:${vin}`, width: 500, height: 500, correctLevel: QRCode.CorrectLevel.H });
+        new QRCode(tempDiv, { text: `VIN:${vin}`, width: 440, height: 440, correctLevel: QRCode.CorrectLevel.H });
 
         setTimeout(() => {
             const qrCanvas = tempDiv.querySelector('canvas');
             if (!qrCanvas) return;
 
             const canvasFinal = document.createElement('canvas');
-            canvasFinal.width = 500; canvasFinal.height = 590;
+            // Mărim dimensiunile canvas-ului final la 540x630px ca să facem loc marginii albe din jurul codului
+            canvasFinal.width = 540; canvasFinal.height = 630;
             const ctx = canvasFinal.getContext('2d');
 
-            ctx.fillStyle = "#FFFFFF"; ctx.fillRect(0, 0, 500, 590);
-            ctx.drawImage(qrCanvas, 0, 0);
+            // 1. Spatele complet ALB (Quiet Zone obligatoriu pentru telefoane)
+            ctx.fillStyle = "#FFFFFF"; 
+            ctx.fillRect(0, 0, 540, 630);
+            
+            // 2. Desenăm codul QR centrat, lăsând o margine de siguranță de 50px de jur împrejur
+            ctx.drawImage(qrCanvas, 50, 50);
 
-            ctx.fillStyle = "#000000"; ctx.font = "bold 38px Arial"; ctx.textAlign = "center";
-            ctx.fillText("CarID - Istoric Digital", 250, 555);
+            // 3. Textul de branding din subsol
+            ctx.fillStyle = "#000000"; 
+            ctx.font = "bold 38px Arial"; 
+            ctx.textAlign = "center";
+            ctx.fillText("CarID - Istoric Digital", 270, 575);
 
             const img = document.getElementById('imgQRCode');
             img.innerHTML = "";
