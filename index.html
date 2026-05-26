@@ -17,6 +17,14 @@
         .page { display: none; padding: 20px; box-sizing: border-box; max-width: 600px; margin: 0 auto; }
         .page.active { display: block; }
         
+        /* Stil pentru logo-ul aplicației */
+        .app-logo {
+            display: block;
+            margin: 0 auto 15px auto;
+            max-width: 120px;
+            height: auto;
+        }
+        
         /* Butoane și Carduri */
         button {
             width: 100%; padding: 12px; margin: 8px 0; border: none; border-radius: 6px;
@@ -60,7 +68,9 @@
 <body>
 
     <div id="home-page" class="page active">
-        <h2 style="text-align:center; color:#1565C0; margin-bottom:5px;">CarID</h2>
+        <img src="logo.png" alt="CarID Logo" class="app-logo" onerror="this.style.display='none';">
+        
+        <h2 style="text-align:center; color:#1565C0; margin-top:0; margin-bottom:5px;">CarID</h2>
         <p style="text-align:center; margin-top:0; color:#666;">Alegeți rolul pentru a începe:</p>
         
         <button class="btn-primary" onclick="setRol('proprietar')">🚗 SUNT PROPRIETAR (Scanează / Garaj)</button>
@@ -110,7 +120,7 @@
                 <div style="position: relative; text-align: left;">
                     <label>Tipul intervenției / Lucrare executată *</label>
                     <input type="text" id="inputDescriere" autocomplete="off" placeholder="Ex: Schimb filtre, discuri frână...">
-                    <div id="sugestestii-descriere-container" style="position: absolute; top: 85%; left: 0; right: 0; background: white; border: 1px solid #CCC; border-top: none; border-radius: 0 0 6px 6px; max-height: 200px; overflow-y: auto; z-index: 9999; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.15);"></div>
+                    <div id="sugestii-descriere-container" style="position: absolute; top: 85%; left: 0; right: 0; background: white; border: 1px solid #CCC; border-radius: 0 0 6px 6px; max-height: 200px; overflow-y: auto; z-index: 9999; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.15);"></div>
                 </div>
 
                 <label>Piese folosite / Producători</label>
@@ -175,7 +185,8 @@
 
     <div id="drawerOverlay" onclick="toggleDrawer(false)"></div>
     <div id="drawerMenu">
-        <h3>Meniu CarID</h3>
+        <img src="logo.png" alt="CarID Logo" style="display:block; margin: 0 auto 10px auto; max-width: 80px; height: auto;" onerror="this.style.display='none';">
+        <h3 style="text-align:center; margin-top:0; margin-bottom:20px; color:#1565C0;">Meniu CarID</h3>
         <button class="btn-secondary" onclick="toggleDrawer(false); navigateTo('home-page');">🏠 Ecran Principal</button>
         <button class="btn-secondary" onclick="toggleDrawer(false); navigateTo('create-qr-page');">✨ Înregistrare Mașină (QR)</button>
     </div>
@@ -197,7 +208,6 @@
     <div style="position:fixed; bottom:20px; right:20px; z-index:900;">
         <button onclick="toggleDrawer(true)" style="width:55px; height:55px; border-radius:50%; background:#1565C0; color:white; font-size:24px; display:flex; align-items:center; justify-content:center; padding:0; margin:0;">☰</button>
     </div>
-
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -273,7 +283,6 @@
         window.proceseazaCodScanat = function(textScanat) {
             let vinCurat = textScanat.trim();
             
-            // Verificăm dacă codul QR scanat este un link URL sau text simplu (Compatibilitate ambele tipuri)
             if (vinCurat.includes("?vin=")) {
                 const urlParams = new URLSearchParams(vinCurat.substring(vinCurat.indexOf('?')));
                 vinCurat = urlParams.get('vin') || "";
@@ -409,7 +418,7 @@
                 const card = document.createElement('div');
                 card.style.cssText = "background: #FFF; padding: 12px; margin-bottom: 8px; border-radius: 6px; border: 1px solid #E0E0E0;";
                 let topHeader = `<div style="display: flex; justify-content: space-between; align-items: center; width:100%;"><span style="color:#000; font-weight:bold; font-size:16px;">${l.data} - ${l.km} KM</span>`;
-                if (esteProprietarMod) topHeader += `<button onclick="stergeLucrare('${l.id}')" style="background:transparent; border:none; font-size:1.2rem; cursor:pointer;">🗑️</button>`;
+                if (!esteProprietarMod) topHeader += `<button onclick="stergeLucrare('${l.id}')" style="background:transparent; border:none; font-size:1.2rem; cursor:pointer;">🗑️</button>`;
                 topHeader += `</div>`;
                 let piese = l.piese ? `<div style="color:#555; font-style:italic; font-size:14px; margin-top:2px;">Piese: ${l.piese}</div>` : '';
                 let cost = (l.cost && l.cost !== "0") ? `<div style="color:#388E3C; font-weight:bold; font-size:14px; margin-top:2px;">Cost: ${l.cost} RON</div>` : '';
@@ -470,6 +479,8 @@
                 document.getElementById('inputCostPiese').value = ""; document.getElementById('inputCostManopera').value = ""; document.getElementById('inputUrmatorKm').value = "";
                 document.getElementById('inputUrmatoareaData').value = ""; document.getElementById('inputObservatii').value = "";
                 incarcaIstoric();
+            }).catch((error) => {
+                alert("Eroare la salvare: " + error.message);
             });
         };
 
@@ -532,9 +543,7 @@
             else prompt("Copiați VIN-ul:", vinCurent);
         };
 
-        // ===================================================
         // GENERARE COD QR INTELIGENT (URL DIRECT)
-        // ===================================================
         window.genereazaCodQRWeb = function() {
             const vin = document.getElementById('inputVIN_Client').value.trim().toUpperCase();
             const pin = document.getElementById('inputPIN_Securitate').value.trim();
@@ -545,12 +554,10 @@
             vinCurentQR = vin;
             set(ref(db, `Masini/${vin}/pin`), pin).then(() => {
                 
-                // Construim link-ul complet dinamic (Află automat adresa de GitHub unde este urcat site-ul)
                 const adresaBazaSite = window.location.href.split('?')[0];
                 const linkCompletInterfata = `${adresaBazaSite}?vin=${vin}`;
 
                 const tempDiv = document.createElement("div");
-                // Înlocuim codul vechi cu link-ul URL complet pe care camera nativă îl recunoaște direct!
                 new QRCode(tempDiv, { text: linkCompletInterfata, width: 440, height: 440, correctLevel: QRCode.CorrectLevel.H });
 
                 setTimeout(() => {
@@ -595,9 +602,7 @@
             });
         };
 
-        // ===================================================
         // DEPISTARE SCANARE DIRECTĂ DIN CAMERĂ (URL PARSING)
-        // ===================================================
         function verificaDacaVineDinScanareDirecta() {
             const urlParams = new URLSearchParams(window.location.search);
             const vinDetectatDinLink = urlParams.get('vin');
@@ -605,22 +610,21 @@
             if (vinDetectatDinLink && vinDetectatDinLink.length === 17) {
                 const vinCurat = vinDetectatDinLink.toUpperCase();
                 
-                // Îl salvăm direct în garaj ca să nu-l mai piardă la refresh
                 salveazaInGarajLocal(vinCurat);
                 
-                // Deschidem direct fișa mașinii în modul Proprietar
                 esteProprietarMod = true;
                 deschideDetalii(vinCurat);
                 
-                // Curățăm URL-ul din bara browser-ului ca la următorul refresh manual să nu reintre forțat în mașină
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
         }
 
-        // EXECUTATE LA LANSAREA SITE-ULUI (REFRESH SAU LINK)
+        // EXECUȚIE LA LANSAREA SITE-ULUI
         incarcaGarajLocal();
         verificaDacaVineDinScanareDirecta();
-        setTimeout(window.initializeazaAutocompleteDescriere, 600);
+        
+        // Inițializăm autocomplete-ul direct, fără delay-uri inutile
+        window.initializeazaAutocompleteDescriere();
     </script>
 </body>
 </html>
