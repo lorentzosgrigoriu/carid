@@ -1,6 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getDatabase, ref, set, get, push, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
+// Configurare Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyAD1-X7o_jzV5OjjA3p341VMP-wWsnjjmg",
     authDomain: "carid-eae71.firebaseapp.com",
@@ -19,6 +20,7 @@ let esteProprietarMod = false;
 let vinCurent = "";
 let listaLucrariCompleta = [];
 
+// Matricea de sugestii auto-complete pentru mecanic
 const SUGESTII_LUCRARI = [
     "Revizie completa (Ulei + 4 filtre)", "Schimb ulei motor", "Schimb filtru ulei", "Schimb filtru aer", "Schimb filtru habitaclu (polen)", "Schimb filtru combustibil", "Schimb lichid de frana", "Schimb antigel / Curatare instalatie", "Schimb ulei cutie de viteze manuala", "Schimb ulei cutie automata (Metoda prin cadere)", "Schimb ulei cutie automata (Aparat / Dinamic)", "Schimb ulei diferential", "Schimb ulei cutie de transfer (4x4)", "Resetare interval service / Ulei",
     "Schimb placute frana fata", "Schimb placute frana spate", "Schimb discuri si placute frana fata", "Schimb discuri si placute frana spate", "Schimb lichid frana + Aerisire sistem", "Schimb etrier frana", "Reconditionare etrier (Garnituri + Piston)", "Schimb cablu frana de mana", "Reglaj frana de mana", "Schimb senzori uzura placute", "Schimb furtunuri frana (flexibile)", "Schimb pompa centrala de frana",
@@ -32,13 +34,13 @@ const SUGESTII_LUCRARI = [
     "Schimb turbosuflanta (Turbina)", "Reconditionare turbosuflanta", "Schimb actuator turbina (Electric/Vacuumatic)", "Curatare galerie admisie / Clapete swirl", "Schimb radiator intercooler", "Schimb furtun intercooler (Presiune)"
 ];
 
+// Navigatie intre ecrane
 window.navigateTo = function(pageId) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById(pageId).classList.add('active');
     if (pageId !== 'home-page') opresteScanner();
     if (pageId === 'garaj-page') incarcaGarajLocal();
-    
-    toggleFormPopup(false);
+    window.toggleFormPopup(false);
 };
 
 window.toggleDrawer = function(open) {
@@ -46,7 +48,7 @@ window.toggleDrawer = function(open) {
     document.getElementById('drawerOverlay').style.display = open ? 'block' : 'none';
 };
 
-// Deschidere/Inchidere Pop-up de adaugare lucrare
+// NOU: Deschidere/Inchidere Pop-up de adaugare lucrare
 window.toggleFormPopup = function(show) {
     const container = document.getElementById('formPopupContainer');
     const overlay = document.getElementById('formPopupOverlay');
@@ -60,6 +62,7 @@ window.toggleFormPopup = function(show) {
     }
 };
 
+// Seteaza rol si deschide scanner
 window.setRol = function(rol) {
     esteProprietarMod = (rol === 'proprietar');
     document.getElementById('scanner-container').style.display = 'block';
@@ -75,7 +78,7 @@ window.setRol = function(rol) {
 
 window.opresteScanner = function() {
     if (html5QrcodeScanner) {
-                html5QrcodeScanner.stop().then(() => {
+        html5QrcodeScanner.stop().then(() => {
             document.getElementById('scanner-container').style.display = 'none';
             html5QrcodeScanner = null;
         }).catch(e => console.log(e));
@@ -84,23 +87,19 @@ window.opresteScanner = function() {
 
 window.proceseazaCodScanat = function(textScanat) {
     let vinCurat = textScanat.trim();
-    
     if (vinCurat.includes("?vin=")) {
         const urlParams = new URLSearchParams(vinCurat.substring(vinCurat.indexOf('?')));
         vinCurat = urlParams.get('vin') || "";
     } else if (vinCurat.startsWith("VIN:")) {
         vinCurat = vinCurat.replace("VIN:", "").trim();
     }
-    
     vinCurat = vinCurat.toUpperCase();
 
     if (vinCurat.length === 17) {
         opresteScanner();
         if (esteProprietarMod) {
             let vreaSalvare = confirm(`🚗 Vehicul detectat (${vinCurat})!\n\nDoresti sa SALVEZI aceasta masina in Garajul tau pentru acces rapid?`);
-            if (vreaSalvare) {
-                salveazaInGarajLocal(vinCurat);
-            }
+            if (vreaSalvare) salveazaInGarajLocal(vinCurat);
         }
         deschideDetalii(vinCurat);
     } else {
@@ -108,6 +107,7 @@ window.proceseazaCodScanat = function(textScanat) {
     }
 };
 
+// Management Garaj Local (LocalStorage)
 function salveazaInGarajLocal(vin) {
     try {
         let garaj = JSON.parse(localStorage.getItem('garaj_carid')) || [];
@@ -157,6 +157,7 @@ window.stergeDinGaraj = function(vin) {
     }
 };
 
+// Deschidere pagina detalii masina
 function deschideDetalii(vin) {
     vinCurent = vin;
     document.getElementById('vin-title').innerText = "VIN: " + vin;
@@ -171,7 +172,7 @@ function deschideDetalii(vin) {
         ecranPin.style.display = 'flex';
         continutMasina.style.display = 'none';
     } else {
-        btnPlutitor.style.display = 'flex'; // Afiseaza butonul plutitor doar pentru Mecanic
+        btnPlutitor.style.display = 'flex'; // Afisat doar pentru Mecanic
         ecranPin.style.display = 'none';
         continutMasina.style.display = 'block';
         incarcaIstoric();
@@ -193,6 +194,7 @@ window.verificaPinWeb = function() {
     });
 };
 
+// Incarcare si filtrare istoric din Firebase
 function incarcaIstoric() {
     get(ref(db, `Masini/${vinCurent}/lucrari`)).then((snapshot) => {
         listaLucrariCompleta = [];
@@ -230,7 +232,8 @@ window.filtreazaLucrari = function(query) {
     });
 };
 
-window.initializeazaAutocompleteDescriere = function() {
+// Autocomplete logic
+function initializeazaAutocompleteDescriere() {
     const inputDesc = document.getElementById('inputDescriere');
     const containerSugestii = document.getElementById('sugestii-descriere-container');
     if (!inputDesc || !containerSugestii) return;
@@ -256,8 +259,9 @@ window.initializeazaAutocompleteDescriere = function() {
         });
         containerSugestii.style.display = 'block';
     });
-};
+}
 
+// Salvare lucrare in Firebase
 window.salveazaLucrareNoua = function() {
     const km = document.getElementById('inputKM').value.trim();
     let desc = document.getElementById('inputDescriere').value.trim();
@@ -281,7 +285,7 @@ window.salveazaLucrareNoua = function() {
         document.getElementById('inputCostPiese').value = ""; document.getElementById('inputCostManopera').value = ""; document.getElementById('inputUrmatorKm').value = "";
         document.getElementById('inputUrmatoareaData').value = ""; document.getElementById('inputObservatii').value = "";
         
-        toggleFormPopup(false); // Inchide pop-up-ul automat dupa salvare
+        window.toggleFormPopup(false); // NOU: Inchide pop-up-ul automat după salvare
         incarcaIstoric();
     }).catch((error) => {
         alert("Eroare la salvare: " + error.message);
@@ -303,13 +307,94 @@ function actualizeazaSemafor() {
     }
 }
 
-// MENIURI EXTRA MODALE
+// ==========================================
+// TOATE FUNCTIILE TALE VECHI PASTRATE INTACTE
+// ==========================================
+
 window.deschideMeniuActiuni = function() {
     document.getElementById('actionSheetMenu').style.display = 'block';
     document.getElementById('actionMenuOverlay').style.display = 'block';
+    
+    const optiuniProprietar = document.getElementById('optiuni-proprietar-web');
+    if (optiuniProprietar) {
+        optiuniProprietar.style.display = esteProprietarMod ? 'block' : 'none';
+    }
 };
 
 window.lockMeniuActiuni = function() {
     document.getElementById('actionSheetMenu').style.display = 'none';
     document.getElementById('actionMenuOverlay').style.display = 'none';
+};
+
+window.afiseazaStatusDocument = function(tipDoc) {
+    lockMeniuActiuni();
+    get(ref(db, `Masini/${vinCurent}/documente/${tipDoc}`)).then((snapshot) => {
+        let valoareCurenta = snapshot.exists() ? snapshot.val() : "Nespecificat";
+        let nouaData = prompt(`Data curenta pentru ${tipDoc.toUpperCase()} este: ${valoareCurenta}\n\nIntrodu noua data (sau apasa Cancel):`, valoareCurenta);
+        if (nouaData !== null && nouaData.trim() !== "") {
+            set(ref(db, `Masini/${vinCurent}/documente/${tipDoc}`), nouaData.trim()).then(() => alert("Data actualizata cu succes!"));
+        }
+    });
+};
+
+window.afiseazaSpecificatiiWeb = function() {
+    lockMeniuActiuni();
+    get(ref(db, `Masini/${vinCurent}/specificatii`)).then((snapshot) => {
+        let dateSpec = snapshot.exists() ? snapshot.val() : { ulei: "Nespecificat", anvelope: "Nespecificat" };
+        let msg = `⚙️ Specificatii tehnice curente:\n\n🛢️ Spec ulei: ${dateSpec.ulei || 'Nespecificat'}\n🚗 Dimensiuni anvelope: ${dateSpec.anvelope || 'Nespecificat'}`;
+        
+        if(!esteProprietarMod) {
+            let vreaModificare = confirm(`${msg}\n\nDoresti sa modifici aceste specificatii?`);
+            if(vreaModificare) {
+                let nouUlei = prompt("Introdu tipul de ulei recomandat (ex: 5W30 VW 507.00):", dateSpec.ulei || "");
+                let noiAnvelope = prompt("Introdu dimensiunile anvelopelor (ex: 205/55 R16):", dateSpec.anvelope || "");
+                if (nouUlei !== null && noiAnvelope !== null) {
+                    set(ref(db, `Masini/${vinCurent}/specificatii`), { ulei: nouUlei, anvelope: noiAnvelope }).then(() => alert("Specificatii salvate!"));
+                }
+            }
+        } else {
+            alert(msg);
+        }
+    });
+};
+
+window.deschideCalculatorConsum = function() {
+    lockMeniuActiuni();
+    let kmParcursi = prompt("Introdu numarul de kilometri parcursi de la plin la plin:");
+    let litriAlimentati = prompt("Introdu numarul de litri alimentati:");
+    if(kmParcursi && litriAlimentati) {
+        let consumMediu = (parseFloat(litriAlimentati) / parseFloat(kmParcursi)) * 100;
+        alert(`🧮 Consumul mediu calculat este: ${consumMediu.toFixed(2)} L / 100 KM`);
+    }
+};
+
+window.partajeazaVinWeb = function() {
+    lockMeniuActiuni();
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(vinCurent).then(() => alert("VIN copiat in clipboard!"));
+    } else {
+        alert("VIN-ul masinii este: " + vinCurent);
+    }
+};
+
+window.genereazaCodQRWeb = function() {
+    const vinInput = document.getElementById('inputVIN_Client').value.trim().toUpperCase();
+    const pin1 = document.getElementById('inputPIN_Securitate').value.trim();
+    const pin2 = document.getElementById('inputPIN_Confirmare').value.trim();
+
+    if(vinInput.length !== 17 || pin1.length !== 4 || pin1 !== pin2) {
+        alert("Asigura-te ca VIN are 17 caractere si PIN-urile coincid (4 cifre)!");
+        return;
+    }
+
+    set(ref(db, `Masini/${vinInput}/pin`), pin1).then(() => {
+        document.getElementById('imgQRCode').innerHTML = "";
+        new QRCode(document.getElementById('imgQRCode'), {
+            text: `https://carid-eae71.web.app/?vin=${vinInput}`,
+            width: 256,
+            height: 256
+        });
+        document.getElementById('qrContainer').style.display = 'flex';
+        alert("Masina inregistrata cu succes pe server!");
+    });
 };
