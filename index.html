@@ -110,7 +110,7 @@
                 <div style="position: relative; text-align: left;">
                     <label>Tipul intervenției / Lucrare executată *</label>
                     <input type="text" id="inputDescriere" autocomplete="off" placeholder="Ex: Schimb filtre, discuri frână...">
-                    <div id="sugestii-descriere-container" style="position: absolute; top: 85%; left: 0; right: 0; background: white; border: 1px solid #CCC; border-top: none; border-radius: 0 0 6px 6px; max-height: 200px; overflow-y: auto; z-index: 9999; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.15);"></div>
+                    <div id="sugestestii-descriere-container" style="position: absolute; top: 85%; left: 0; right: 0; background: white; border: 1px solid #CCC; border-top: none; border-radius: 0 0 6px 6px; max-height: 200px; overflow-y: auto; z-index: 9999; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.15);"></div>
                 </div>
 
                 <label>Piese folosite / Producători</label>
@@ -139,7 +139,7 @@
                 </div>
 
                 <label>Observații suplimentare / Recomandări</label>
-                <textarea id="inputObservatii" rows="2" placeholder="Ex: Urmează schimbul plăcuțelor pe spate în aprox. 5000km."></textarea>
+                <textarea id="inputObservatii" rows="2" placeholder="Ex: Urmează schimbul..."></textarea>
 
                 <button class="btn-primary" style="background:#388E3C;" onclick="salveazaLucrareNoua()">💾 Salvează în Istoric</button>
             </div>
@@ -167,9 +167,7 @@
 
         <div id="qrContainer" class="card" style="display:none; flex-direction:column; align-items:center; text-align:center;">
             <h4>Codul tău a fost securizat și generat!</h4>
-            
             <div id="imgQRCode" style="background:#FFF; padding:10px; border-radius:6px; max-width:280px; width:100%;"></div>
-            
             <button class="btn-primary" style="background:#2E7D32; margin-top:15px;" onclick="salveazaInGalerieWeb()">📥 Descarcă Imaginea (PNG)</button>
             <button class="btn-secondary" onclick="partajeazaQRWeb()">📤 Trimite / Share QR</button>
         </div>
@@ -185,22 +183,19 @@
     <div id="actionMenuOverlay" onclick="lockMeniuActiuni()"></div>
     <div id="actionSheetMenu">
         <h3 style="margin-top:0; border-bottom:1px solid #EEE; padding-bottom:10px; color:#1565C0;">📋 Acțiuni Rapide</h3>
-        
         <div id="optiuni-proprietar-web">
             <button class="btn-secondary" onclick="afiseazaStatusDocument('itp')">📅 Verifică / Schimbă dată ITP</button>
             <button class="btn-secondary" onclick="afiseazaStatusDocument('rca')">🛡️ Verifică / Schimbă dată RCA</button>
             <button class="btn-secondary" onclick="afiseazaStatusDocument('rovinieta')">🛣️ Verifică / Schimbă Rovinietă</button>
         </div>
-        
         <button class="btn-secondary" onclick="afiseazaSpecificatiiWeb()">🛢️ Specificații Ulei & Anvelope</button>
         <button class="btn-secondary" onclick="deschideCalculatorConsum()">🧮 Calculator Consum Mediu</button>
         <button class="btn-secondary" onclick="partajeazaVinWeb()">🔗 Copiază / Partajează VIN</button>
-        
         <button class="btn-primary" style="background:#C62828; margin-top:15px;" onclick="lockMeniuActiuni()">Închide Meniu</button>
     </div>
 
     <div style="position:fixed; bottom:20px; right:20px; z-index:900;">
-        <button onclick="toggleDrawer(true)" style="width:55px; height:55px; border-radius:50%; background:#1565C0; color:white; font-size:24px; box-shadow:0 4px 8px rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center; padding:0; margin:0;">☰</button>
+        <button onclick="toggleDrawer(true)" style="width:55px; height:55px; border-radius:50%; background:#1565C0; color:white; font-size:24px; display:flex; align-items:center; justify-content:center; padding:0; margin:0;">☰</button>
     </div>
 
 
@@ -208,7 +203,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, set, get, push, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // Datele din google-services.json adaptate pentru web
         const firebaseConfig = {
             apiKey: "AIzaSyAD1-X7o_jzV5OjjA3p341VMP-wWsnjjmg",
             authDomain: "carid-eae71.firebaseapp.com",
@@ -229,7 +223,6 @@
         let canvasFinalPentruSalvare = null;
         let vinCurentQR = "";
 
-        // LISTA COMPLETĂ DE AUTOCOMPLETE (Peste 100 de intervenții uzuale în service-uri)
         const SUGESTII_LUCRARI = [
             "Revizie completă (Ulei + 4 filtre)", "Schimb ulei motor", "Schimb filtru ulei", "Schimb filtru aer", "Schimb filtru habitaclu (polen)", "Schimb filtru combustibil", "Schimb lichid de frână", "Schimb antigel / Curățare instalație", "Schimb ulei cutie de viteze manuală", "Schimb ulei cutie automată (Metoda prin cădere)", "Schimb ulei cutie automată (Aparat / Dinamic)", "Schimb ulei diferențial", "Schimb ulei cutie de transfer (4x4)", "Resetare interval service / Ulei",
             "Schimb plăcuțe frână față", "Schimb plăcuțe frână spate", "Schimb discuri și plăcuțe frână față", "Schimb discuri și plăcuțe frână spate", "Schimb lichid frână + Aerisire sistem", "Schimb etrier frână", "Recondiționare etrier (Garnituri + Piston)", "Schimb cablu frână de mână", "Reglaj frână de mână", "Schimb senzori uzură plăcuțe", "Schimb furtunuri frână (flexibile)", "Schimb pompă centrală de frână",
@@ -243,7 +236,6 @@
             "Schimb turbosuflantă (Turbină)", "Recondiționare turbosuflantă", "Schimb actuator turbină (Electric/Vacuumatic)", "Curățare galerie admisie / Clapete swirl", "Schimb radiator intercooler", "Schimb furtun intercooler (Presiune)"
         ];
 
-        // NAVIGARE ÎNTRE ECRANE
         window.navigateTo = function(pageId) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById(pageId).classList.add('active');
@@ -256,7 +248,6 @@
             document.getElementById('drawerOverlay').style.display = open ? 'block' : 'none';
         };
 
-        // INTERFAȚĂ SCANARE CAMERA
         window.setRol = function(rol) {
             esteProprietarMod = (rol === 'proprietar');
             document.getElementById('scanner-container').style.display = 'block';
@@ -280,15 +271,22 @@
         };
 
         window.proceseazaCodScanat = function(textScanat) {
-            let vinCurat = textScanat.trim().toUpperCase();
-            if (vinCurat.startsWith("VIN:")) {
+            let vinCurat = textScanat.trim();
+            
+            // Verificăm dacă codul QR scanat este un link URL sau text simplu (Compatibilitate ambele tipuri)
+            if (vinCurat.includes("?vin=")) {
+                const urlParams = new URLSearchParams(vinCurat.substring(vinCurat.indexOf('?')));
+                vinCurat = urlParams.get('vin') || "";
+            } else if (vinCurat.startsWith("VIN:")) {
                 vinCurat = vinCurat.replace("VIN:", "").trim();
             }
+            
+            vinCurat = vinCurat.toUpperCase();
+
             if (vinCurat.length === 17) {
                 opresteScanner();
-                
                 if (esteProprietarMod) {
-                    let vreaSalvare = confirm(`🚗 Vehicul detectat (${vinCurat})!\n\nDorești să SALVEZI această mașină în Garajul tău pentru acces rapid?\n\n[OK = Salvează în Garaj / Cancel = Doar Vizualizare Temporară]`);
+                    let vreaSalvare = confirm(`🚗 Vehicul detectat (${vinCurat})!\n\nDorești să SALVEZI această mașină în Garajul tău pentru acces rapid?`);
                     if (vreaSalvare) {
                         salveazaInGarajLocal(vinCurat);
                     }
@@ -299,27 +297,20 @@
             }
         };
 
-        // MANAGEMENT LOCALSTORAGE (GARAJ REFRESH TRIGER)
         function salveazaInGarajLocal(vin) {
             try {
                 let garaj = JSON.parse(localStorage.getItem('garaj_carid')) || [];
                 if (!garaj.includes(vin)) {
                     garaj.push(vin);
                     localStorage.setItem('garaj_carid', JSON.stringify(garaj));
-                    alert("Vehiculul a fost salvat cu succes în Garajul tău!");
                     incarcaGarajLocal();
-                } else {
-                    alert("Vehiculul exista deja în Garajul tău.");
                 }
-            } catch (e) {
-                console.error("Eroare salvare localStorage", e);
-            }
+            } catch (e) { console.error(e); }
         }
 
         function incarcaGarajLocal() {
             const containerGaraj = document.getElementById('lista-garaj');
             if (!containerGaraj) return; 
-
             containerGaraj.innerHTML = "";
             let garaj = JSON.parse(localStorage.getItem('garaj_carid')) || [];
 
@@ -331,13 +322,11 @@
             garaj.forEach(vin => {
                 const cardMasina = document.createElement('div');
                 cardMasina.style.cssText = "background: #1565C0; color: white; padding: 15px; margin: 10px 0; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2); font-weight: bold; cursor: pointer;";
-                
                 cardMasina.onclick = function(e) {
                     if(e.target.tagName === 'BUTTON') return;
                     esteProprietarMod = true;
                     deschideDetalii(vin);
                 };
-
                 cardMasina.innerHTML = `
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <span>🚗</span>
@@ -350,7 +339,7 @@
         }
 
         window.stergeDinGaraj = function(vin) {
-            if (confirm(`Sigur vrei să ștergi mașina cu VIN-ul ${vin} din garajul tău?`)) {
+            if (confirm(`Sigur vrei să ștergi mașina cu VIN-ul ${vin}?`)) {
                 let garaj = JSON.parse(localStorage.getItem('garaj_carid')) || [];
                 garaj = garaj.filter(item => item !== vin);
                 localStorage.setItem('garaj_carid', JSON.stringify(garaj));
@@ -358,9 +347,7 @@
             }
         };
 
-        // ACCES FIȘĂ & SECURITATE PIN
         function deschideDetalii(vin) {
-            vinCurent = win;
             vinCurent = vin;
             document.getElementById('vin-title').innerText = "VIN: " + vin;
             document.getElementById('etPin').value = "";
@@ -396,7 +383,6 @@
             });
         };
 
-        // MANAGEMENT COLOANĂ ISTORIC COMPLET
         function incarcaIstoric() {
             get(ref(db, `Masini/${vinCurent}/lucrari`)).then((snapshot) => {
                 listaLucrariCompleta = [];
@@ -417,68 +403,45 @@
             const q = query.toLowerCase();
             const container = document.getElementById('istoric-lucrari-container');
             container.innerHTML = "";
-
-            const filtrate = listaLucrariCompleta.filter(l => 
-                (l.descriere && l.descriere.toLowerCase().includes(q)) || (l.km && l.km.toString().includes(q))
-            );
+            const filtrate = listaLucrariCompleta.filter(l => (l.descriere && l.descriere.toLowerCase().includes(q)) || (l.km && l.km.toString().includes(q)));
 
             filtrate.forEach(l => {
                 const card = document.createElement('div');
                 card.style.cssText = "background: #FFF; padding: 12px; margin-bottom: 8px; border-radius: 6px; border: 1px solid #E0E0E0;";
-                
-                let topHeader = `<div style="display: flex; justify-content: space-between; align-items: center; width:100%;">
-                    <span style="color:#000; font-weight:bold; font-size:16px;">${l.data} - ${l.km} KM</span>`;
-                if (esteProprietarMod) {
-                    topHeader += `<button onclick="stergeLucrare('${l.id}')" style="background:transparent; border:none; font-size:1.2rem; cursor:pointer;">🗑️</button>`;
-                }
+                let topHeader = `<div style="display: flex; justify-content: space-between; align-items: center; width:100%;"><span style="color:#000; font-weight:bold; font-size:16px;">${l.data} - ${l.km} KM</span>`;
+                if (esteProprietarMod) topHeader += `<button onclick="stergeLucrare('${l.id}')" style="background:transparent; border:none; font-size:1.2rem; cursor:pointer;">🗑️</button>`;
                 topHeader += `</div>`;
-
                 let piese = l.piese ? `<div style="color:#555; font-style:italic; font-size:14px; margin-top:2px;">Piese: ${l.piese}</div>` : '';
                 let cost = (l.cost && l.cost !== "0") ? `<div style="color:#388E3C; font-weight:bold; font-size:14px; margin-top:2px;">Cost: ${l.cost} RON</div>` : '';
                 let rem = (l.urmatorKm || l.urmatoareaData) ? `<div style="color:#1A237E; font-size:13px; font-weight:500; margin-top:4px;">Următoarea: ${l.urmatorKm || ''} KM / ${l.urmatoareaData || ''}</div>` : '';
                 let obs = l.observatii ? `<div style="color:#757575; font-size:12px; margin-top:2px;">Note: ${l.observatii}</div>` : '';
-
                 card.innerHTML = `${topHeader} <div style="color:#333; font-size:15px; margin-top:4px; font-weight:500;">${l.descriere}</div> ${piese} ${cost} ${rem} ${obs}`;
                 container.appendChild(card);
             });
         };
 
-        // AUTOCOMPLETE DE TIP LOGIC (INPUT TEXT CORECTAT)
         window.initializeazaAutocompleteDescriere = function() {
             const inputDesc = document.getElementById('inputDescriere');
             const containerSugestii = document.getElementById('sugestii-descriere-container');
-            
             if (!inputDesc || !containerSugestii) return;
 
             document.addEventListener('click', function(e) {
-                if (e.target !== inputDesc && e.target !== containerSugestii) {
-                    containerSugestii.style.display = 'none';
-                }
+                if (e.target !== inputDesc && e.target !== containerSugestii) containerSugestii.style.display = 'none';
             });
 
             inputDesc.addEventListener('input', function() {
                 const valoare = this.value.toLowerCase().trim();
                 containerSugestii.innerHTML = '';
-                
                 if (!valoare) { containerSugestii.style.display = 'none'; return; }
-
-                const filtrate = SUGESTII_LUCRARI.filter(lucrare => 
-                    lucrare.toLowerCase().includes(valoare)
-                ).slice(0, 6);
-
+                const filtrate = SUGESTII_LUCRARI.filter(lucrare => lucrare.toLowerCase().includes(valoare)).slice(0, 6);
                 if (filtrate.length === 0) { containerSugestii.style.display = 'none'; return; }
 
                 filtrate.forEach(lucrare => {
                     const item = document.createElement('div');
                     item.style.cssText = "padding: 12px; cursor: pointer; border-bottom: 1px solid #EEE; color: #333; font-size: 14px; font-weight: 500; text-align: left;";
-                    
                     const index = lucrare.toLowerCase().indexOf(valoare);
                     item.innerHTML = lucrare.substring(0, index) + "<strong>" + lucrare.substring(index, index + valoare.length) + "</strong>" + lucrare.substring(index + valoare.length);
-
-                    item.addEventListener('click', function() {
-                        inputDesc.value = lucrare;
-                        containerSugestii.style.display = 'none';
-                    });
+                    item.addEventListener('click', function() { inputDesc.value = lucrare; containerSugestii.style.display = 'none'; });
                     containerSugestii.appendChild(item);
                 });
                 containerSugestii.style.display = 'block';
@@ -497,31 +460,21 @@
 
             if (!km || !desc) { alert("Kilometrii și Tipul intervenției sunt obligatorii!"); return; }
             if (desc.length > 0) desc = desc.charAt(0).toUpperCase() + desc.slice(1);
-            
             const costTotalStr = (costP + costM).toString();
             const dataAzi = new Date().toLocaleDateString('ro-RO');
 
             const nouaLucrare = { km, descriere: desc, piese, cost: costTotalStr, urmatorKm, urmatoareaData, observatii: obs, data: dataAzi };
-            
             push(ref(db, `Masini/${vinCurent}/lucrari`), nouaLucrare).then(() => {
                 alert("Lucrare salvată cu succes!");
-                document.getElementById('inputKM').value = "";
-                document.getElementById('inputDescriere').value = "";
-                document.getElementById('inputPiese').value = "";
-                document.getElementById('inputCostPiese').value = "";
-                document.getElementById('inputCostManopera').value = "";
-                document.getElementById('inputUrmatorKm').value = "";
-                document.getElementById('inputUrmatoareaData').value = "";
-                document.getElementById('inputObservatii').value = "";
-                document.getElementById('sugestii-descriere-container').innerHTML = '';
+                document.getElementById('inputKM').value = ""; document.getElementById('inputDescriere').value = ""; document.getElementById('inputPiese').value = "";
+                document.getElementById('inputCostPiese').value = ""; document.getElementById('inputCostManopera').value = ""; document.getElementById('inputUrmatorKm').value = "";
+                document.getElementById('inputUrmatoareaData').value = ""; document.getElementById('inputObservatii').value = "";
                 incarcaIstoric();
             });
         };
 
         window.stergeLucrare = function(id) {
-            if (confirm("Sigur vrei să ștergi această înregistrare din istoric?")) {
-                remove(ref(db, `Masini/${vinCurent}/lucrari/${id}`)).then(() => incarcaIstoric());
-            }
+            if (confirm("Sigur vrei să ștergi această înregistrare?")) remove(ref(db, `Masini/${vinCurent}/lucrari/${id}`)).then(() => incarcaIstoric());
         };
 
         function actualizeazaSemafor() {
@@ -531,12 +484,11 @@
                 semafor.style.backgroundColor = "#4CAF50";
                 txt.innerText = `Sisteme Verificate. Ultima revizie: ${listaLucrariCompleta[0].km} KM`;
             } else {
-                semafor.style.backgroundColor = "#FF6D00";
-                txt.innerText = "Nicio lucrare înregistrată în istoric.";
+                semafor.style.backgroundColor = "#FF6D00"; txt.innerText = "Nicio lucrare înregistrată în istoric.";
             }
         }
 
-        // MANAGEMENT ACTIONS MODALE EXTRA
+        // MENIURI EXTRA MODALE
         window.deschideMeniuActiuni = function() {
             document.getElementById('actionSheetMenu').style.display = 'block';
             document.getElementById('actionMenuOverlay').style.display = 'block';
@@ -580,7 +532,9 @@
             else prompt("Copiați VIN-ul:", vinCurent);
         };
 
-        // GENERATOR COD QR CU EMBED BRANDING ȘI MARGINE ALBĂ (QUIET ZONE FIX)
+        // ===================================================
+        // GENERARE COD QR INTELIGENT (URL DIRECT)
+        // ===================================================
         window.genereazaCodQRWeb = function() {
             const vin = document.getElementById('inputVIN_Client').value.trim().toUpperCase();
             const pin = document.getElementById('inputPIN_Securitate').value.trim();
@@ -590,8 +544,14 @@
 
             vinCurentQR = vin;
             set(ref(db, `Masini/${vin}/pin`), pin).then(() => {
+                
+                // Construim link-ul complet dinamic (Află automat adresa de GitHub unde este urcat site-ul)
+                const adresaBazaSite = window.location.href.split('?')[0];
+                const linkCompletInterfata = `${adresaBazaSite}?vin=${vin}`;
+
                 const tempDiv = document.createElement("div");
-                new QRCode(tempDiv, { text: `VIN:${vin}`, width: 440, height: 440, correctLevel: QRCode.CorrectLevel.H });
+                // Înlocuim codul vechi cu link-ul URL complet pe care camera nativă îl recunoaște direct!
+                new QRCode(tempDiv, { text: linkCompletInterfata, width: 440, height: 440, correctLevel: QRCode.CorrectLevel.H });
 
                 setTimeout(() => {
                     const qrCanvas = tempDiv.querySelector('canvas');
@@ -601,24 +561,15 @@
                     canvasFinal.width = 540; canvasFinal.height = 630;
                     const ctx = canvasFinal.getContext('2d');
 
-                    // Fundal alb forțat în spatele codului
-                    ctx.fillStyle = "#FFFFFF"; 
-                    ctx.fillRect(0, 0, 540, 630);
-                    
-                    // Desenăm codul QR centrat (lasă 50px zonă liberă pe laturi)
+                    ctx.fillStyle = "#FFFFFF"; ctx.fillRect(0, 0, 540, 630);
                     ctx.drawImage(qrCanvas, 50, 50);
 
-                    // Text subsol
-                    ctx.fillStyle = "#000000"; 
-                    ctx.font = "bold 38px Arial"; 
-                    ctx.textAlign = "center";
+                    ctx.fillStyle = "#000000"; ctx.font = "bold 38px Arial"; ctx.textAlign = "center";
                     ctx.fillText("CarID - Istoric Digital", 270, 575);
 
-                    const img = document.getElementById('imgQRCode');
-                    img.innerHTML = "";
+                    const img = document.getElementById('imgQRCode'); img.innerHTML = "";
                     const webImg = document.createElement("img");
-                    webImg.src = canvasFinal.toDataURL("image/png");
-                    webImg.style.width = "100%";
+                    webImg.src = canvasFinal.toDataURL("image/png"); webImg.style.width = "100%";
                     img.appendChild(webImg);
 
                     canvasFinalPentruSalvare = canvasFinal;
@@ -631,9 +582,7 @@
         window.salveazaInGalerieWeb = function() {
             if (!canvasFinalPentruSalvare) return;
             const link = document.createElement('a');
-            link.download = `CarID_${Date.now()}.png`;
-            link.href = canvasFinalPentruSalvare.toDataURL("image/png");
-            link.click();
+            link.download = `CarID_${Date.now()}.png`; link.href = canvasFinalPentruSalvare.toDataURL("image/png"); link.click();
         };
 
         window.partajeazaQRWeb = function() {
@@ -646,8 +595,31 @@
             });
         };
 
-        // EXECUTATE AUTOMATĂ LA REFRESH
+        // ===================================================
+        // DEPISTARE SCANARE DIRECTĂ DIN CAMERĂ (URL PARSING)
+        // ===================================================
+        function verificaDacaVineDinScanareDirecta() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const vinDetectatDinLink = urlParams.get('vin');
+
+            if (vinDetectatDinLink && vinDetectatDinLink.length === 17) {
+                const vinCurat = vinDetectatDinLink.toUpperCase();
+                
+                // Îl salvăm direct în garaj ca să nu-l mai piardă la refresh
+                salveazaInGarajLocal(vinCurat);
+                
+                // Deschidem direct fișa mașinii în modul Proprietar
+                esteProprietarMod = true;
+                deschideDetalii(vinCurat);
+                
+                // Curățăm URL-ul din bara browser-ului ca la următorul refresh manual să nu reintre forțat în mașină
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }
+
+        // EXECUTATE LA LANSAREA SITE-ULUI (REFRESH SAU LINK)
         incarcaGarajLocal();
+        verificaDacaVineDinScanareDirecta();
         setTimeout(window.initializeazaAutocompleteDescriere, 600);
     </script>
 </body>
