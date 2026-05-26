@@ -27,7 +27,6 @@ const normalizeazaText = (text) => {
     return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 };
 
-// Sugestii curatate complet de diacritice pentru utilizare rapida
 const SUGESTII_LUCRARI = [
     "Revizie completa (Ulei + 4 filtre)", "Schimb ulei motor", "Schimb filtru ulei", "Schimb filtru aer", "Schimb filtru habitaclu (polen)", "Schimb filtru combustibil", "Schimb lichid de frana", "Schimb antigel / Curatare instalatie", "Schimb ulei cutie de viteze manuala", "Schimb ulei cutie automata (Metoda prin cadere)", "Schimb ulei cutie automata (Aparat / Dinamic)", "Schimb ulei diferential", "Schimb ulei cutie de transfer (4x4)", "Resetare interval service / Ulei",
     "Schimb placute frana fata", "Schimb placute frana spate", "Schimb discuri si placute frana fata", "Schimb discuri si placute frana spate", "Schimb lichid frana + Aerisire sistem", "Schimb etrier frana", "Reconditionare etrier (Garnituri + Piston)", "Schimb cablu frana de mana", "Reglaj frana de mana", "Schimb senzori uzura placute", "Schimb furtunuri frana (flexibile)", "Schimb pompa centrala di frana",
@@ -41,11 +40,20 @@ const SUGESTII_LUCRARI = [
     "Schimb turbosuflanta (Turbina)", "Reconditionare turbosuflanta", "Schimb actuator turbina (Electric/Vacuumatic)", "Curatare galerie admisie / Clapete swirl", "Schimb radiator intercooler", "Schimb furtun intercooler (Presiune)"
 ];
 
-window.navigateTo = function(pageId) {
+// NAVIGARE INTELIGENTĂ CU SUPORT PENTRU ISTORICUL DISPOZITIVULUI (BACK BUTTON)
+window.navigateTo = function(pageId, pushState = true) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById(pageId).classList.add('active');
+    
+    const targetPage = document.getElementById(pageId);
+    if (targetPage) targetPage.classList.add('active');
+    
     if (pageId !== 'home-page') opresteScanner();
     if (pageId === 'garaj-page') incarcaGarajLocal();
+
+    // Dacă navigarea se face prin click pe butoanele din pagină, salvăm starea în istoric
+    if (pushState) {
+        window.history.pushState({ pageId: pageId }, "", pageId === 'home-page' ? window.location.pathname : `?page=${pageId}`);
+    }
 };
 
 window.toggleDrawer = function(open) {
@@ -141,7 +149,7 @@ function incarcaGarajLocal() {
 window.stergeDinGaraj = function(vin) {
     if (confirm(`Stergi masina ${vin}?`)) {
         let garaj = JSON.parse(localStorage.getItem('garaj_carid')) || [];
-        garaj = garaj.filter(item => item !== vin);
+        garaj = garaj.filter(item => item !== win);
         localStorage.setItem('garaj_carid', JSON.stringify(garaj));
         incarcaGarajLocal();
     }
@@ -175,6 +183,7 @@ window.verificaPinWeb = function() {
         if (snapshot.exists() && snapshot.val().toString() === pinIntrodus) {
             document.getElementById('ecran-pin-blocat').style.display = 'none';
             document.getElementById('continut-detalii-masina').style.display = 'block';
+            document.getElementById('layoutMecanic').style.display = 'flex';
             incarcaIstoric();
         } else {
             alert("PIN Incorect!");
@@ -192,7 +201,7 @@ function incarcaIstoric() {
                 l.id = child.key;
                 listaLucrariCompleta.push(l);
             });
-            // Sortare inteligenta care elimina caracterele non-numerice (ex: spatii, puncte) inainte de sortare
+            // Curățare sigură și sortare descrescătoare matematică perfectă (fără erori de string-uri sau spații)
             listaLucrariCompleta.sort((a, b) => {
                 const kmA = parseInt(String(a.km).replace(/\D/g, '')) || 0;
                 const kmB = parseInt(String(b.km).replace(/\D/g, '')) || 0;
@@ -216,17 +225,36 @@ window.filtreazaLucrari = function(query) {
 
     filtrate.forEach(l => {
         const card = document.createElement('div');
-        card.style.cssText = "background:#FFF; padding:12px; margin-bottom:8px; border-radius:6px; border:1px solid #E0E0E0;";
-        let topHeader = `<div style="display:flex; justify-content:space-between; align-items:center; width:100%;"><span style="color:#000; font-weight:bold; font-size:16px;">${l.data} - ${l.km} KM</span>`;
-        if (!esteProprietarMod) topHeader += `<button onclick="stergeLucrare('${l.id}')" style="background:transparent; border:none; font-size:1.2rem; cursor:pointer;">🗑️</button>`;
+        card.style.cssText = "background:#FFF; padding:12px; margin-bottom:8px; border-radius:6px; border:1px solid #E0E0E0; box-shadow:0 1px 3px rgba(0,0,0,0.05);";
+        let topHeader = `<div style="display:flex; justify-content:space-between; align-items:center; width:100%;"><span style="color:#1A237E; font-weight:bold; font-size:15px;">📅 ${l.data} — 🚗 ${l.km} KM</span>`;
+        if (!esteProprietarMod) topHeader += `<button onclick="stergeLucrare('${l.id}')" style="background:transparent; border:none; font-size:1.2rem; cursor:pointer; padding:2px;">🗑️</button>`;
         topHeader += `</div>`;
-        let piese = l.piese ? `<div style="color:#555; font-style:italic; font-size:14px; margin-top:2px;">Piese: ${l.piese}</div>` : '';
-        let cost = (l.cost && l.cost !== "0") ? `<div style="color:#388E3C; font-weight:bold; font-size:14px; margin-top:2px;">Cost: ${l.cost} RON</div>` : '';
-        let rem = (l.urmatorKm || l.urmatoareaData) ? `<div style="color:#1A237E; font-size:13px; font-weight:500; margin-top:4px;">Urmatoarea: ${l.urmatorKm || ''} KM / ${l.urmatoareaData || ''}</div>` : '';
-        let obs = l.observatii ? `<div style="color:#757575; font-size:12px; margin-top:2px;">Note: ${l.observatii}</div>` : '';
-        card.innerHTML = `${topHeader} <div style="color:#333; font-size:15px; margin-top:4px; font-weight:500;">${l.descriere}</div> ${piese} ${cost} ${rem} ${obs}`;
+        let piese = l.piese ? `<div style="color:#555; font-size:13px; margin-top:4px; line-height:1.4;">⚙️ <strong>Piese:</strong> ${l.piese}</div>` : '';
+        let cost = (l.cost && l.cost !== "0") ? `<div style="color:#2E7D32; font-weight:bold; font-size:13px; margin-top:3px;">💰 Cost Total: ${l.cost} RON</div>` : '';
+        let rem = (l.urmatorKm || l.urmatoareaData) ? `<div style="background:#E8EAF6; color:#1A237E; font-size:12px; font-weight:600; margin-top:6px; padding:4px 8px; border-radius:4px; display:inline-block;">🔄 Următoarea scadență: ${l.urmatorKm || '—'} KM / ${l.urmatoareaData || '—'}</div>` : '';
+        let obs = l.observatii ? `<div style="color:#757575; font-size:12px; margin-top:5px; border-top:1px dashed #EEE; padding-top:4px;">📝 <strong>Note:</strong> ${l.observatii}</div>` : '';
+        card.innerHTML = `${topHeader} <div style="color:#222; font-size:15px; margin-top:6px; font-weight:600;">${l.descriere}</div> ${piese} ${cost} ${obs} ${rem}`;
         container.appendChild(card);
     });
+};
+
+// GESTIONARE PANOU FLOTANT MOD MECANIC (BOTTOM SHEET)
+window.deschideFormularLucrare = function(open) {
+    const sheet = document.getElementById('bottomSheetFormular');
+    const overlay = document.getElementById('overlayFormular');
+    if (!sheet || !overlay) return;
+
+    if (open) {
+        overlay.style.display = 'block';
+        setTimeout(() => { sheet.style.bottom = '0'; }, 10);
+        window.history.pushState({ subPage: 'formular_lucrare' }, "");
+    } else {
+        sheet.style.bottom = '-100%';
+        setTimeout(() => { overlay.style.display = 'none'; }, 300);
+        if (window.history.state && window.history.state.subPage === 'formular_lucrare') {
+            window.history.back();
+        }
+    }
 };
 
 window.initializeazaAutocompleteDescriere = function() {
@@ -272,7 +300,7 @@ window.initializeazaAutocompleteDescriere = function() {
     });
 };
 
-window.salveazaLucrareNoua = function() {
+window.salveazaLucrareNouaModificata = function() {
     const km = document.getElementById('inputKM').value.trim();
     let desc = document.getElementById('inputDescriere').value.trim();
     const piese = document.getElementById('inputPiese').value.trim();
@@ -294,6 +322,8 @@ window.salveazaLucrareNoua = function() {
         document.getElementById('inputKM').value = ""; document.getElementById('inputDescriere').value = ""; document.getElementById('inputPiese').value = "";
         document.getElementById('inputCostPiese').value = ""; document.getElementById('inputCostManopera').value = ""; document.getElementById('inputUrmatorKm').value = "";
         document.getElementById('inputUrmatoareaData').value = ""; document.getElementById('inputObservatii').value = "";
+        
+        deschideFormularLucrare(false); // Închide automat panoul glisant de jos
         incarcaIstoric();
     }).catch((error) => {
         alert("Eroare la salvare: " + error.message);
@@ -308,17 +338,17 @@ function actualizeazaSemafor() {
     const semafor = document.getElementById('cardStatus');
     const txt = document.getElementById('tvStatusRevizie');
     if (listaLucrariCompleta.length > 0) {
-        semafor.style.backgroundColor = "#4CAF50";
-        txt.innerText = `Sisteme Verificate. Ultima revizie: ${listaLucrariCompleta[0].km} KM`;
+        semafor.style.backgroundColor = "#2E7D32";
+        txt.innerText = `🟢 Sisteme Verificate. Ultima intervenție: ${listaLucrariCompleta[0].km} KM`;
     } else {
-        semafor.style.backgroundColor = "#FF6D00"; txt.innerText = "Nicio lucrare inregistrata in istoric.";
+        semafor.style.backgroundColor = "#EF6C00"; txt.innerText = "🟠 Nicio lucrare înregistrată în istoric.";
     }
 }
 
 window.deschideMeniuActiuni = function() {
     document.getElementById('actionSheetMenu').style.display = 'block';
     document.getElementById('actionMenuOverlay').style.display = 'block';
-    document.getElementById('optiuni-proprietar-web').style.display = esteProprietarMod ? 'block' : 'none';
+    document.getElementById('optiuni-proprietar-web').style.display = esteProprietarMod ? 'flex' : 'none';
 };
 window.lockMeniuActiuni = function() {
     document.getElementById('actionSheetMenu').style.display = 'none';
@@ -424,22 +454,58 @@ function verificaDacaVineDinScanareDirecta() {
         salveazaInGarajLocal(vinCurat);
         esteProprietarMod = true;
         deschideDetalii(vinCurat);
-        window.history.replaceState({}, document.title, window.location.pathname);
+        window.history.replaceState({ pageId: 'details-page' }, document.title, `?page=details-page`);
     }
 }
 
-// ==========================================
-// EXECUTIE INIȚIALĂ ȘI SUPORT PWA
-// ==========================================
+// ========================================================
+// ASCULTĂTOR LOGIC PENTRU BUTONUL FIZIC / SYSTEM BACK AL TELEFONULUI
+// ========================================================
+window.addEventListener('popstate', function(event) {
+    // 1. Dacă e deschis formularul de adăugare mecanic (Bottom Sheet), îl închidem primul
+    const sheet = document.getElementById('bottomSheetFormular');
+    if (sheet && sheet.style.bottom === '0px') {
+        const overlay = document.getElementById('overlayFormular');
+        sheet.style.bottom = '-100%';
+        if (overlay) overlay.style.display = 'none';
+        return;
+    }
+
+    // 2. Dacă e deschis meniul lateral (Drawer), îl închidem
+    const drawer = document.getElementById('drawerMenu');
+    if (drawer && drawer.classList.contains('open')) {
+        window.toggleDrawer(false);
+        return;
+    }
+
+    // 3. Dacă e deschis meniul de acțiuni (Action Sheet), îl închidem
+    const actionMenu = document.getElementById('actionSheetMenu');
+    if (actionMenu && actionMenu.style.display === 'block') {
+        window.lockMeniuActiuni();
+        return;
+    }
+
+    // 4. Navigăm la pagina din istoric, sau implicit la Home-Page
+    if (event.state && event.state.pageId) {
+        window.navigateTo(event.state.pageId, false);
+    } else {
+        window.navigateTo('home-page', false);
+    }
+});
+
+// INITIALIZARE DE BAZĂ LA PORNIRE
+if (!window.history.state) {
+    window.history.replaceState({ pageId: 'home-page' }, "", window.location.pathname);
+}
+
 verificaDacaVineDinScanareDirecta();
 window.initializeazaAutocompleteDescriere();
 
-// Înregistrarea Service Worker-ului pentru funcționarea Offline și instalare PWA
+// ÎNREGISTRARE SERVICE WORKER (PWA - OFFLINE SUPPORT)
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        // Observă că am scos '/'-ul din fața lui sw.js pentru compatibilitate cu GitHub Pages
         navigator.serviceWorker.register('sw.js')
-            .then(reg => console.log('CarID PWA: Service Worker înregistrat cu succes! Domeniu:', reg.scope))
-            .catch(err => console.error('CarID PWA: Eroare la înregistrarea Service Worker-ului:', err));
+            .then(reg => console.log('CarID PWA: Service Worker înregistrat cu succes!', reg.scope))
+            .catch(err => console.error('CarID PWA: Eroare SW:', err));
     });
 }
