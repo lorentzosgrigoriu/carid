@@ -437,7 +437,8 @@ window.initializeazaAutocompleteDescriere();
 // Înregistrarea Service Worker-ului pentru funcționarea Offline și instalare PWA
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
+        // Observă că am scos '/'-ul din fața lui sw.js pentru compatibilitate cu GitHub Pages
+        navigator.serviceWorker.register('sw.js')
             .then(reg => console.log('CarID PWA: Service Worker înregistrat cu succes! Domeniu:', reg.scope))
             .catch(err => console.error('CarID PWA: Eroare la înregistrarea Service Worker-ului:', err));
     });
