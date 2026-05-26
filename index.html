@@ -21,7 +21,6 @@
         .page { display: none; padding: 20px; box-sizing: border-box; max-width: 600px; margin: 0 auto; padding-bottom: 80px; }
         .page.active { display: block; }
         
-        /* Stil pentru logo-ul aplicatiei */
         .app-logo {
             display: block;
             margin: 0 auto 15px auto;
@@ -29,7 +28,6 @@
             height: auto;
         }
         
-        /* Butoane si Carduri */
         button {
             width: 100%; padding: 12px; margin: 8px 0; border: none; border-radius: 6px;
             font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s;
@@ -43,13 +41,12 @@
             border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
-        /* Formulare si Inputs */
         input, select, textarea {
             width: 100%; padding: 12px; margin: 6px 0 15px 0; border: 1px solid #CCC; 
             border-radius: 6px; font-size: 16px; box-sizing: border-box;
         }
         
-        /* Navigatie si Meniuri (Drawer) */
+        /* Meniu Lateral (Drawer) */
         #drawerMenu {
             position: fixed; top: 0; left: -280px; width: 280px; height: 100%;
             background: white; box-shadow: 2px 0 5px rgba(0,0,0,0.2); z-index: 1000;
@@ -68,16 +65,17 @@
             box-shadow: 0 -4px 10px rgba(0,0,0,0.15); max-width: 600px; margin: 0 auto;
         }
 
-        /* Buton plutitor pentru adaugare lucrare (+) */
+        /* NOU: Buton plutitor pentru adaugare lucrare (+) */
         .fab-add {
             position: fixed; bottom: 90px; right: 20px; z-index: 900;
             width: 55px; height: 55px; border-radius: 50%;
             background: #388E3C; color: white; font-size: 28px;
             display: flex; align-items: center; justify-content: center;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3); padding: 0; margin: 0;
+            border: none; cursor: pointer;
         }
 
-        /* Pop-up inalt pentru adaugare lucrare (Tastatura safe) */
+        /* NOU: Pop-up inalt pentru adaugare lucrare (Tastatura safe) */
         #formPopupContainer {
             position: fixed; bottom: -100%; left: 0; right: 0; background: white;
             border-radius: 16px 16px 0 0; z-index: 1002;
@@ -98,13 +96,11 @@
 
     <div id="home-page" class="page active">
         <img src="logo.png" alt="CarID Logo" class="app-logo" onerror="this.style.display='none';">
-        
         <h2 style="text-align:center; color:#1565C0; margin-top:0; margin-bottom:5px;">CarID</h2>
         <p style="text-align:center; margin-top:0; color:#666;">Alegeți rolul pentru a începe:</p>
         
         <button class="btn-primary" onclick="setRol('proprietar')">🚗 SUNT PROPRIETAR (Scanează / Încarcă)</button>
         <button class="btn-secondary" style="background-color:#37474F; color:white;" onclick="setRol('mecanic')">🔧 SUNT MECANIC (Adaugă Lucrări)</button>
-        
         <button class="btn-secondary" style="background-color:#2E7D32; color:white;" onclick="navigateTo('inregistrare-page')">➕ INREGISTRARE MASINA NOUA</button>
 
         <button id="btnInstaleazaApp" class="btn-primary" style="background-color:#FF6D00; display:none; margin-top:20px;">📲 INSTALEAZĂ APLICAȚIA PE TELEFON</button>
@@ -183,7 +179,7 @@
     <div id="formPopupContainer">
         <div class="popup-header">
             <h3 style="margin:0; color:#37474F;">🔧 Lucrare Noua</h3>
-            <button onclick="toggleFormPopup(false)" style="width:auto; margin:0; padding:5px 10px; background:#E0E0E0; border-radius:4px;">❌</button>
+            <button onclick="toggleFormPopup(false)" style="width:auto; margin:0; padding:5px 10px; background:#E0E0E0; border-radius:4px; border:none; cursor:pointer;">❌</button>
         </div>
         <div class="popup-body">
             <label>Kilometraj curent (KM) *</label>
@@ -223,7 +219,7 @@
             <label>Observatii suplimentare / Recomandari</label>
             <textarea id="inputObservatii" rows="2" placeholder="Ex: Urmeaza schimbul..."></textarea>
 
-            <button class="btn-primary" style="background:#388E3C; margin-top:10px;" onclick="salveazaLucrareNoua()">💾 Salveaza in Istoric</button>
+            <button class="btn-primary" style="background:#388E3C; margin-top:10px; color:white;" onclick="salveazaLucrareNoua()">💾 Salveaza in Istoric</button>
         </div>
     </div>
 
