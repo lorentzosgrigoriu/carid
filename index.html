@@ -5,11 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CarID - Istoric Digital</title>
     
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1565C0">
+    <link rel="apple-touch-icon" href="logo.png">
+
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <style>
-        /* Stiluri de bază și resetare generală */
+        /* Stiluri de baza si resetare generala */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0; padding: 0; background-color: #F5F5F5; color: #333;
@@ -17,7 +21,7 @@
         .page { display: none; padding: 20px; box-sizing: border-box; max-width: 600px; margin: 0 auto; padding-bottom: 80px; }
         .page.active { display: block; }
         
-        /* Stil pentru logo-ul aplicației */
+        /* Stil pentru logo-ul aplicatiei */
         .app-logo {
             display: block;
             margin: 0 auto 15px auto;
@@ -25,7 +29,7 @@
             height: auto;
         }
         
-        /* Butoane și Carduri */
+        /* Butoane si Carduri */
         button {
             width: 100%; padding: 12px; margin: 8px 0; border: none; border-radius: 6px;
             font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s;
@@ -39,13 +43,13 @@
             border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
-        /* Formulare și Inputs */
+        /* Formulare si Inputs */
         input, select, textarea {
             width: 100%; padding: 12px; margin: 6px 0 15px 0; border: 1px solid #CCC; 
             border-radius: 6px; font-size: 16px; box-sizing: border-box;
         }
         
-        /* Navigație și Meniuri (Drawer) */
+        /* Navigatie si Meniuri (Drawer) */
         #drawerMenu {
             position: fixed; top: 0; left: -280px; width: 280px; height: 100%;
             background: white; box-shadow: 2px 0 5px rgba(0,0,0,0.2); z-index: 1000;
@@ -76,14 +80,22 @@
         <button class="btn-primary" onclick="setRol('proprietar')">🚗 SUNT PROPRIETAR (Scanează / Încarcă)</button>
         <button class="btn-secondary" style="background-color:#37474F; color:white;" onclick="setRol('mecanic')">🔧 SUNT MECANIC (Adaugă Lucrări)</button>
         
+        <button class="btn-secondary" style="background-color:#2E7D32; color:white;" onclick="navigateTo('inregistrare-page')">➕ INREGISTRARE MASINA NOUA</button>
+
+        <button id="btnInstaleazaApp" class="btn-primary" style="background-color:#FF6D00; display:none; margin-top:20px;">📲 INSTALEAZĂ APLICAȚIA PE TELEFON</button>
+        
         <div id="scanner-container" style="display:none; margin-top:20px;">
             <div id="reader" style="width:100%; border-radius:8px; overflow:hidden;"></div>
             <button class="btn-secondary" onclick="opresteScanner()" style="margin-top:10px;">❌ Anulează Scanarea</button>
         </div>
+    </div>
 
-        <hr style="border:0; border-top:1px solid #CCC; margin: 25px 0;">
-        
-        <h3 style="color:#333; margin-bottom:5px;">🛠️ Inregistrare Masina Noua (Generare QR)</h3>
+    <div id="inregistrare-page" class="page">
+        <div style="display:flex; align-items:center; margin-bottom:15px;">
+            <button onclick="navigateTo('home-page')" style="width:auto; margin:0; padding:8px 15px;">⬅️ Inapoi</button>
+            <h3 style="margin-left:15px; margin-top:0; margin-bottom:0;">🛠️ Inregistrare Masina</h3>
+        </div>
+
         <div class="card" style="margin-top:10px;">
             <label>Serie Sasiu / VIN (17 caractere) *</label>
             <input type="text" id="inputVIN_Client" maxlength="17" style="font-family:monospace; text-transform:uppercase;" placeholder="WVWZZZ1KZGM......">
@@ -108,7 +120,7 @@
     <div id="garaj-page" class="page">
         <div style="display:flex; align-items:center; margin-bottom:15px;">
             <button onclick="navigateTo('home-page')" style="width:auto; margin:0; padding:8px 15px;">⬅️ Inapoi</button>
-            <h3 style="margin-left:15px; margin-top:0; margin-bottom:0;">🏠 Garajul Meu (Acces Rapid)</h3>
+            <h3 style="margin-left:15px; margin-top:0; margin-bottom:0;">🛠️ Garajul Meu (Acces Rapid)</h3>
         </div>
         <p style="color:#666; font-size:14px; margin-top:0;">Masinile salvate local pe acest dispozitiv:</p>
         <div id="lista-garaj"></div>
@@ -187,8 +199,8 @@
     <div id="drawerMenu">
         <img src="logo.png" alt="CarID Logo" style="display:block; margin: 0 auto 10px auto; max-width: 80px; height: auto;" onerror="this.style.display='none';">
         <h3 style="text-align:center; margin-top:0; margin-bottom:20px; color:#1565C0;">Meniu CarID</h3>
-        <button class="btn-secondary" onclick="toggleDrawer(false); navigateTo('home-page');">🏠 Ecran Principal</button>
-        <button class="btn-secondary" onclick="toggleDrawer(false); navigateTo('garaj-page');">🏠 Garajul Meu</button>
+        <button class="btn-secondary" onclick="toggleDrawer(false); navigateTo('home-page');">🛠️ Ecran Principal</button>
+        <button class="btn-secondary" onclick="toggleDrawer(false); navigateTo('garaj-page');">🛠️ Garajul Meu</button>
     </div>
 
     <div id="actionMenuOverlay" onclick="lockMeniuActiuni()"></div>
@@ -208,7 +220,6 @@
     <div style="position:fixed; bottom:20px; right:20px; z-index:900;">
         <button onclick="toggleDrawer(true)" style="width:55px; height:55px; border-radius:50%; background:#1565C0; color:white; font-size:24px; display:flex; align-items:center; justify-content:center; padding:0; margin:0;">☰</button>
     </div>
-
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -233,8 +244,8 @@
         let listaLucrariCompleta = [];
         let canvasFinalPentruSalvare = null;
         let vinCurentQR = "";
+        let deferredPrompt = null; // Stocare prompt instalare telefon
 
-        // Lista de lucrari curatata complet de diacritice pentru scriere rapida
         const SUGESTII_LUCRARI = [
             "Revizie completa (Ulei + 4 filtre)", "Schimb ulei motor", "Schimb filtru ulei", "Schimb filtru aer", "Schimb filtru habitaclu (polen)", "Schimb filtru combustibil", "Schimb lichid de frana", "Schimb antigel / Curatare instalatie", "Schimb ulei cutie de viteze manuala", "Schimb ulei cutie automata (Metoda prin cadere)", "Schimb ulei cutie automata (Aparat / Dinamic)", "Schimb ulei diferential", "Schimb ulei cutie de transfer (4x4)", "Resetare interval service / Ulei",
             "Schimb placute frana fata", "Schimb placute frana spate", "Schimb discuri si placute frana fata", "Schimb discuri si placute frana spate", "Schimb lichid frana + Aerisire sistem", "Schimb etrier frana", "Reconditionare etrier (Garnituri + Piston)", "Schimb cablu frana de mana", "Reglaj frana de mana", "Schimb senzori uzura placute", "Schimb furtunuri frana (flexibile)", "Schimb pompa centrala de frana",
@@ -311,7 +322,7 @@
         function salveazaInGarajLocal(vin) {
             try {
                 let garaj = JSON.parse(localStorage.getItem('garaj_carid')) || [];
-                if (!garaj.includes(vin)) {
+                if (!proprietar.includes(vin)) {
                     garaj.push(vin);
                     localStorage.setItem('garaj_carid', JSON.stringify(garaj));
                 }
@@ -339,7 +350,7 @@
                 };
                 cardMasina.innerHTML = `
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <span>🚗</span>
+                        <span>🚘</span>
                         <span style="font-size: 15px; letter-spacing: 1px; font-family: monospace;">${vin}</span>
                     </div>
                     <button onclick="stergeDinGaraj('${vin}')" style="background: transparent; border: none; color: white; font-size: 1.2rem; cursor: pointer; padding: 5px;">🗑️</button>
@@ -475,7 +486,6 @@
 
             const nouaLucrare = { km, descriere: desc, piese, cost: costTotalStr, urmatorKm, urmatoareaData, observatii: obs, data: dataAzi };
             
-            // Corectat ID-urile de acces si calea catre Firebase
             push(ref(db, `Masini/${vinCurent}/lucrari`), nouaLucrare).then(() => {
                 alert("Lucrare salvata cu succes!");
                 document.getElementById('inputKM').value = ""; document.getElementById('inputDescriere').value = ""; document.getElementById('inputPiese').value = "";
@@ -519,7 +529,7 @@
             const docRef = ref(db, `Masini/${vinCurent}/documente/${tip}`);
             get(docRef).then((snap) => {
                 const dataC = snap.exists() ? snap.val() : "Nesetata";
-                let nouaD = prompt(`📋 ${tip.toUpperCase()}\nExpira la: ${dataC}\nIntroduceti noua data (DD.MM.YYYY):`, dataC);
+                let nouaD = prompt(`Expira la: ${dataC}\nNoua data (DD.MM.YYYY):`, dataC);
                 if (nouaD) set(docRef, nouaD.trim()).then(() => alert("Data salvata!"));
             });
         };
@@ -529,34 +539,32 @@
             const specsRef = ref(db, `Masini/${vinCurent}/specs`);
             get(specsRef).then((snap) => {
                 let u = snap.child("ulei").val() || "", a = snap.child("anvelope").val() || "";
-                let nouU = prompt("Tip Ulei recomandat:", u), nouA = prompt("Dimensiuni Anvelope:", a);
-                if (nouU !== null || nouA !== null) set(specsRef, { ulei: nouU || u, anvelope: nouA || a }).then(() => alert("Salvat!"));
+                let nouU = prompt("Tip Ulei Recomandat:", u), nouA = prompt("Dimensiuni Anvelope:", a);
+                if (nouU !== null || nouA !== null) set(specsRef, { ulei: nouU || u, anvelope: nouA || a }).then(() => alert("Specificatii salvate!"));
             });
         };
 
         window.deschideCalculatorConsum = function() {
             inchideMeniuActiuni();
-            let litri = parseFloat(prompt("Litri alimentati:")), km = parseFloat(prompt("Kilometri parcursi:"));
-            if (litri && km) alert(`🧮 Consum mediu: ${((litri / km) * 100).toFixed(2)} L/100km`);
+            let litri = parseFloat(prompt("Cati litri ai alimentat?")), km = parseFloat(prompt("Cati kilometri ai parcurs?"));
+            if (litri && km) alert(`Consum mediu calculat: ${((litri / km) * 100).toFixed(2)} L/100km`);
         };
 
         window.partajeazaVinWeb = function() {
             inchideMeniuActiuni();
             if (navigator.share) navigator.share({ title: 'CarID', text: `VIN: ${vinCurent}` });
-            else prompt("Copiati VIN-ul:", vinCurent);
+            else prompt("Copiaza codul VIN de mai jos:", vinCurent);
         };
 
-        // GENERARE COD QR INTELIGENT (URL DIRECT)
         window.genereazaCodQRWeb = function() {
             const vin = document.getElementById('inputVIN_Client').value.trim().toUpperCase();
             const pin = document.getElementById('inputPIN_Securitate').value.trim();
             const conf = document.getElementById('inputPIN_Confirmare').value.trim();
 
-            if (vin.length !== 17 || pin.length !== 4 || pin !== conf) { alert("Verifica lungimea VIN (17) si potrivirea PIN-ului (4 cifre)!"); return; }
+            if (vin.length !== 17 || pin.length !== 4 || pin !== conf) { alert("Verifica datele! VIN-ul trebuie sa aiba 17 caractere, iar PIN-urile trebuie sa fie identice."); return; }
 
             vinCurentQR = vin;
             set(ref(db, `Masini/${vin}/pin`), pin).then(() => {
-                
                 const adresaBazaSite = window.location.href.split('?')[0];
                 const linkCompletInterfata = `${adresaBazaSite}?vin=${vin}`;
 
@@ -584,7 +592,7 @@
 
                     canvasFinalPentruSalvare = canvasFinal;
                     document.getElementById('qrContainer').style.display = 'flex';
-                    alert("Cod QR Securizat Generat cu succes!");
+                    alert("Codul QR digital a fost generat securizat!");
                 }, 150);
             });
         };
@@ -597,32 +605,45 @@
 
         window.partajeazaQRWeb = function() {
             if (!canvasFinalPentruSalvare) return;
-            const msg = `🚗 Codul tau digital CarID pentru VIN: ${vinCurentQR}`;
             canvasFinalPentruSalvare.toBlob((blob) => {
                 const f = new File([blob], "share_qr.png", { type: "image/png" });
-                if (navigator.canShare && navigator.canShare({ files: [f] })) navigator.share({ files: [f], title: "CarID QR", text: msg });
-                else alert("Salvati imaginea si trimiteti-o manual!");
+                if (navigator.canShare && navigator.canShare({ files: [f] })) navigator.share({ files: [f], title: "CarID QR" });
             });
         };
 
-        // DEPISTARE SCANARE DIRECTĂ DIN CAMERĂ (URL PARSING)
         function verificaDacaVineDinScanareDirecta() {
             const urlParams = new URLSearchParams(window.location.search);
             const vinDetectatDinLink = urlParams.get('vin');
 
             if (vinDetectatDinLink && vinDetectatDinLink.length === 17) {
                 const vinCurat = vinDetectatDinLink.toUpperCase();
-                
                 salveazaInGarajLocal(vinCurat);
-                
                 esteProprietarMod = true;
                 deschideDetalii(vinCurat);
-                
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
         }
 
-        // EXECUȚIE LA LANSAREA SITE-ULUI
+        // --- INTEGRARE COMPONENTA DE INSTALARE PE TELEFON (PWA) ---
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e; // Salvam evenimentul ca sa-l pornim din butonul nostru
+            
+            const btnInstaleaza = document.getElementById('btnInstaleazaApp');
+            if (btnInstaleaza) {
+                btnInstaleaza.style.display = 'block'; // Aratam butonul portocaliu
+                
+                btnInstaleaza.addEventListener('click', () => {
+                    btnInstaleaza.style.display = 'none';
+                    deferredPrompt.prompt(); // Declanșăm instalarea nativă a telefonului
+                    deferredPrompt.userChoice.then(() => {
+                        deferredPrompt = null;
+                    });
+                });
+            }
+        });
+
+        // Pornire automata configurari la incarcare
         verificaDacaVineDinScanareDirecta();
         window.initializeazaAutocompleteDescriere();
     </script>
