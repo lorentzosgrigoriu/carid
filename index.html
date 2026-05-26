@@ -2,202 +2,578 @@
 <html lang="ro">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CarID - Garajul Tău Digital</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CarID - Istoric Digital</title>
+    
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#1A237E">
-    
-    <style>
-        body, html {
-            margin: 0; padding: 0;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: #FAFAFA; height: 100%; overflow: hidden;
-        }
-        .page {
-            display: none; position: absolute; top: 0; left: 0;
-            width: 100%; height: 100%; box-sizing: border-box;
-        }
-        .page.active { display: flex; flex-direction: column; }
-        
-        /* Drawer Meniu Lateral */
-        #drawerMenu {
-            position: fixed; top: 0; left: -280px; width: 280px; height: 100%;
-            background: white; z-index: 1001; box-shadow: 3px 0 10px rgba(0,0,0,0.2);
-            transition: left 0.3s ease; display: flex; flex-direction: column;
-        }
-        #drawerMenu.open { left: 0; }
-        .drawer-item {
-            padding: 15px 20px; font-weight: 500; color: #333;
-            cursor: pointer; border-bottom: 1px solid #EEE; display: flex; align-items: center; gap: 15px;
-        }
-        #drawerOverlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.4); z-index: 1000;
-        }
+    <meta name="theme-color" content="#1565C0">
+    <link rel="apple-touch-icon" href="logo.png">
 
-        /* Input Custom */
-        .custom-input {
-            width: 100%; padding: 12px; border: 1px solid #CCC;
-            border-radius: 6px; box-sizing: border-box; font-size: 15px;
-        }
-        .custom-button {
-            width: 100%; background: #1A237E; color: white; border: none;
-            padding: 14px; border-radius: 6px; font-weight: bold; font-size: 16px;
-            cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-    </style>
-    
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+        /* Stiluri de baza si resetare generala */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0; padding: 0; background-color: #F5F5F5; color: #333;
+        }
+        .page { display: none; padding: 20px; box-sizing: border-box; max-width: 600px; margin: 0 auto; padding-bottom: 80px; }
+        .page.active { display: block; }
+        
+        /* Stil pentru logo-ul aplicatiei */
+        .app-logo {
+            display: block;
+            margin: 0 auto 15px auto;
+            max-width: 120px;
+            height: auto;
+        }
+        
+        /* Butoane si Carduri */
+        button {
+            width: 100%; padding: 12px; margin: 8px 0; border: none; border-radius: 6px;
+            font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s;
+        }
+        .btn-primary { background-color: #1565C0; color: white; }
+        .btn-primary:hover { background-color: #0D47A1; }
+        .btn-secondary { background-color: #E0E0E0; color: #333; }
+        
+        .card {
+            background: white; padding: 15px; margin-bottom: 15px; 
+            border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        /* Formulare si Inputs */
+        input, select, textarea {
+            width: 100%; padding: 12px; margin: 6px 0 15px 0; border: 1px solid #CCC; 
+            border-radius: 6px; font-size: 16px; box-sizing: border-box;
+        }
+        
+        /* Navigatie si Meniuri (Drawer) */
+        #drawerMenu {
+            position: fixed; top: 0; left: -280px; width: 280px; height: 100%;
+            background: white; box-shadow: 2px 0 5px rgba(0,0,0,0.2); z-index: 1000;
+            transition: 0.3s; padding: 20px; box-sizing: border-box;
+        }
+        #drawerMenu.open { left: 0; }
+        #drawerOverlay, #actionMenuOverlay, #formPopupOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); display: none; z-index: 999;
+        }
+        
+        /* Meniu Contextual de Actiuni (Bottom Sheet) */
+        #actionSheetMenu {
+            position: fixed; bottom: 0; left: 0; right: 0; background: white;
+            border-radius: 16px 16px 0 0; padding: 20px; display: none; z-index: 1001;
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.15); max-width: 600px; margin: 0 auto;
+        }
+
+        /* Buton plutitor pentru adaugare lucrare (+) */
+        .fab-add {
+            position: fixed; bottom: 90px; right: 20px; z-index: 900;
+            width: 55px; height: 55px; border-radius: 50%;
+            background: #388E3C; color: white; font-size: 28px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3); padding: 0; margin: 0;
+        }
+
+        /* Pop-up inalt pentru adaugare lucrare (Tastatura safe) */
+        #formPopupContainer {
+            position: fixed; bottom: -100%; left: 0; right: 0; background: white;
+            border-radius: 16px 16px 0 0; z-index: 1002;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.2); max-width: 600px; margin: 0 auto;
+            transition: bottom 0.3s ease-out; max-height: 85vh; display: flex; flex-direction: column;
+        }
+        #formPopupContainer.open { bottom: 0; }
+        .popup-header {
+            padding: 15px 20px; border-bottom: 1px solid #EEE;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .popup-body {
+            padding: 20px; overflow-y: auto; flex: 1; padding-bottom: 40px;
+        }
+    </style>
 </head>
 <body>
 
-    <div id="drawerOverlay" onclick="toggleDrawer(false)"></div>
-    <div id="drawerMenu">
-        <div style="background: #1A237E; color: white; padding: 25px 20px; text-align: center;">
-            <h2 style="margin: 0; font-size: 22px; letter-spacing: 1px;">CarID Menu</h2>
-            <p style="margin: 5px 0 0 0; font-size: 12px; opacity: 0.8;">Garajul Tău Digital pe bază de QR</p>
+    <div id="home-page" class="page active">
+        <img src="logo.png" alt="CarID Logo" class="app-logo" onerror="this.style.display='none';">
+        
+        <h2 style="text-align:center; color:#1565C0; margin-top:0; margin-bottom:5px;">CarID</h2>
+        <p style="text-align:center; margin-top:0; color:#666;">Alegeți rolul pentru a începe:</p>
+        
+        <button class="btn-primary" onclick="setRol('proprietar')">🚗 SUNT PROPRIETAR (Scanează / Încarcă)</button>
+        <button class="btn-secondary" style="background-color:#37474F; color:white;" onclick="setRol('mecanic')">🔧 SUNT MECANIC (Adaugă Lucrări)</button>
+        
+        <button class="btn-secondary" style="background-color:#2E7D32; color:white;" onclick="navigateTo('inregistrare-page')">➕ INREGISTRARE MASINA NOUA</button>
+
+        <button id="btnInstaleazaApp" class="btn-primary" style="background-color:#FF6D00; display:none; margin-top:20px;">📲 INSTALEAZĂ APLICAȚIA PE TELEFON</button>
+        
+        <div id="scanner-container" style="display:none; margin-top:20px;">
+            <div id="reader" style="width:100%; border-radius:8px; overflow:hidden;"></div>
+            <button class="btn-secondary" onclick="opresteScanner()" style="margin-top:10px;">❌ Anulează Scanarea</button>
         </div>
-        <div class="drawer-item" onclick="toggleDrawer(false); navigateTo('home-page')">🔍 Scanează Cod QR</div>
-        <div class="drawer-item" onclick="toggleDrawer(false); navigateTo('garaj-page')">🚗 Garajul Meu Local</div>
-        <div class="drawer-item" onclick="toggleDrawer(false); navigateTo('generator-page')">🖨️ Generează CarID Nou</div>
     </div>
 
-    <div id="home-page" class="page active">
-        <header style="background:#1A237E; color:white; padding:15px; display:flex; align-items:center; justify-content:space-between;">
-            <button onclick="toggleDrawer(true)" style="background:transparent; border:none; color:white; font-size:1.5rem; cursor:pointer;">☰</button>
-            <h3 style="margin:0; font-weight: 600;">CarID - Scanner</h3>
-            <div style="width:24px;"></div>
-        </header>
-        
-        <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; text-align:center;">
-            <h2 style="color:#1A237E; margin-bottom:5px;">Bun venit în Garajul tău!</h2>
-            <p style="color:#666; margin-top:0; margin-bottom:25px;">Alege-ți rolul pentru a începe scanarea vehiculului</p>
-            
-            <div style="display:flex; gap:15px; width:100%; max-width:400px; margin-bottom:20px;">
-                <button onclick="setRol('proprietar')" style="flex:1; background:#1565C0; color:white; border:none; padding:16px; border-radius:8px; font-weight:bold; font-size:15px; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.15);">🙋‍♂️ Sunt PROPRIETAR</button>
-                <button onclick="setRol('mecanic')" style="flex:1; background:#2E7D32; color:white; border:none; padding:16px; border-radius:8px; font-weight:bold; font-size:15px; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.15);">🔧 Sunt MECANIC</button>
-            </div>
+    <div id="inregistrare-page" class="page">
+        <div style="display:flex; align-items:center; margin-bottom:15px;">
+            <button onclick="navigateTo('home-page')" style="width:auto; margin:0; padding:8px 15px;">⬅️ Inapoi</button>
+            <h3 style="margin-left:15px; margin-top:0; margin-bottom:0;">🛠️ Inregistrare Masina</h3>
+        </div>
 
-            <div id="scanner-container" style="display:none; width:100%; max-width:350px; background:white; padding:10px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15);">
-                <div id="reader" style="width:100%; border-radius:8px; overflow:hidden;"></div>
-                <button onclick="opresteScanner()" style="width:100%; margin-top:10px; background:#D32F2F; color:white; border:none; padding:10px; border-radius:6px; font-weight:bold; cursor:pointer;">Anulează Scanarea</button>
-            </div>
+        <div class="card" style="margin-top:10px;">
+            <label>Serie Sasiu / VIN (17 caractere) *</label>
+            <input type="text" id="inputVIN_Client" maxlength="17" style="font-family:monospace; text-transform:uppercase;" placeholder="WVWZZZ1KZGM......">
+
+            <label>Seteaza PIN din 4 cifre (Pentru Proprietar) *</label>
+            <input type="password" id="inputPIN_Securitate" inputmode="numeric" maxlength="4" placeholder="****" style="text-align:center; font-size:18px; letter-spacing:5px;">
+
+            <label>Confirma PIN-ul setat *</label>
+            <input type="password" id="inputPIN_Confirmare" inputmode="numeric" maxlength="4" placeholder="****" style="text-align:center; font-size:18px; letter-spacing:5px;">
+
+            <button class="btn-primary" onclick="genereazaCodQRWeb()">⚡ Genereaza Cod Digital</button>
+        </div>
+
+        <div id="qrContainer" class="card" style="display:none; flex-direction:column; align-items:center; text-align:center;">
+            <h4>Codul tau a fost securizat si generat!</h4>
+            <div id="imgQRCode" style="background:#FFF; padding:10px; border-radius:6px; max-width:280px; width:100%;"></div>
+            <button class="btn-primary" style="background:#2E7D32; margin-top:15px;" onclick="salveazaInGalerieWeb()">📥 Descarca Imaginea (PNG)</button>
+            <button class="btn-secondary" onclick="partajeazaQRWeb()">📤 Trimite / Share QR</button>
         </div>
     </div>
 
     <div id="garaj-page" class="page">
-        <header style="background:#1A237E; color:white; padding:15px; display:flex; align-items:center; justify-content:space-between;">
-            <button onclick="navigateTo('home-page')" style="background:transparent; border:none; color:white; font-size:1.4rem; cursor:pointer;">🏠</button>
-            <h3 style="margin:0;">Garajul Meu</h3>
-            <div style="width:24px;"></div>
-        </header>
-        <div style="flex:1; overflow-y:auto; padding:15px;">
-            <p style="color:#555; text-align:center;">Mașini scanate anterior și salvate în memoria telefonului tău:</p>
-            <div id="lista-garaj"></div>
+        <div style="display:flex; align-items:center; margin-bottom:15px;">
+            <button onclick="navigateTo('home-page')" style="width:auto; margin:0; padding:8px 15px;">⬅️ Inapoi</button>
+            <h3 style="margin-left:15px; margin-top:0; margin-bottom:0;">🛠️ Garajul Meu (Acces Rapid)</h3>
         </div>
+        <p style="color:#666; font-size:14px; margin-top:0;">Masinile salvate local pe acest dispozitiv:</p>
+        <div id="lista-garaj"></div>
     </div>
 
     <div id="details-page" class="page">
-        <header style="background:#1A237E; color:white; padding:15px; display:flex; align-items:center; justify-content:space-between;">
-            <button onclick="navigateTo('home-page')" style="background:transparent; border:none; color:white; font-size:1.4rem; cursor:pointer;">🏠</button>
-            <h3 id="vin-title" style="margin:0; font-family:monospace; font-size:15px; letter-spacing:0.5px;">VIN: -</h3>
-            <button onclick="deschideMeniuActiuni()" style="background:transparent; border:none; color:white; font-size:1.4rem; cursor:pointer;">⚙️</button>
-        </header>
-
-        <div id="ecran-pin-blocat" style="display:none; flex:1; flex-direction:column; align-items:center; justify-content:center; padding:30px; background:#FFF;">
-            <span style="font-size:3.5rem; margin-bottom:15px;">🔒</span>
-            <h3 style="margin:0 0 10px 0; color:#333;">Istoric Protejat prin PIN</h3>
-            <p style="text-align:center; color:#666; font-size:14px; margin-top:0; margin-bottom:20px;">Introdu codul de securitate format din 4 cifre primit de la proprietar pentru a debloca.</p>
-            <input type="password" id="etPin" maxlength="4" pattern="[0-9]*" inputmode="numeric" placeholder="• • • •" style="width:120px; text-align:center; font-size:24px; padding:10px; border:2px solid #1A237E; border-radius:8px; letter-spacing:6px; margin-bottom:20px;">
-            <button onclick="verificaPinWeb()" style="width:100%; max-width:200px; background:#1A237E; color:white; border:none; padding:12px; border-radius:6px; font-weight:bold; cursor:pointer;">Verifică PIN</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <button onclick="navigateTo('home-page')" style="width:auto; margin:0; padding:8px 15px;">⬅️ Inapoi</button>
+            <h3 id="vin-title" style="margin:0; font-family:monospace; font-size:16px;">VIN: -</h3>
+            <button onclick="deschideMeniuActiuni()" style="width:auto; margin:0; padding:8px 15px; background:#1565C0; color:white;">⚙️ Meniu</button>
         </div>
 
-        <div id="continut-detalii-masina" style="display:none; flex:1; display:flex; flex-direction:column; overflow:hidden; position:relative;">
-            
-            <div id="cardStatus" style="padding:12px; color:white; font-weight:bold; text-align:center;">
-                <span id="tvStatusRevizie">Se încarcă istoricul...</span>
+        <div id="ecran-pin-blocat" class="card" style="display:none; flex-direction:column; align-items:center; padding:30px 20px; text-align:center;">
+            <span style="font-size:3rem; margin-bottom:10px;">🔒</span>
+            <h3>Introdu PIN-ul de Securitate</h3>
+            <p style="color:#666; font-size:14px; margin-top:0;">Acest istoric este privat. Introdu codul din 4 cifre setat la crearea QR-ului:</p>
+            <input type="password" id="etPin" inputmode="numeric" maxlength="4" placeholder="••••" style="text-align:center; font-size:24px; letter-spacing:10px; max-width:150px;">
+            <button class="btn-primary" onclick="verificaPinWeb()">Deblocheaza Istoric</button>
+        </div>
+
+        <div id="continut-detalii-masina" style="display:none;">
+            <div id="cardStatus" class="card" style="color:white; font-weight:bold; text-align:center;">
+                <span id="tvStatusRevizie">Se incarca datele...</span>
             </div>
 
-            <div id="layoutMecanic" style="display:none; flex:1; display:flex; flex-direction:column; overflow:hidden;">
-                <div style="padding:10px; background:#F5F5F5; border-bottom:1px solid #E0E0E0;">
-                    <input type="text" oninput="filtreazaLucrari(this.value)" placeholder="🔍 Caută în istoric (ex: ulei, distributie)..." style="width:100%; padding:10px; border:1px solid #CCC; border-radius:6px; box-sizing:border-box; font-size:14px;">
-                </div>
+            <input type="text" id="cautareIstoric" placeholder="🔍 Cauta in istoric (ex: ulei, placute)..." oninput="filtreazaLucrari(this.value)">
 
-                <div id="istoric-lucrari-container" style="flex:1; overflow-y:auto; padding:10px; background:#FAFAFA;">
+            <div id="istoric-lucrari-container"></div>
+        </div>
+
+        <button id="btnDeschideFormular" class="fab-add" style="display:none;" onclick="toggleFormPopup(true)">+</button>
+    </div>
+
+    <div id="formPopupOverlay" onclick="toggleFormPopup(false)"></div>
+    <div id="formPopupContainer">
+        <div class="popup-header">
+            <h3 style="margin:0; color:#37474F;">🔧 Lucrare Noua</h3>
+            <button onclick="toggleFormPopup(false)" style="width:auto; margin:0; padding:5px 10px; background:#E0E0E0; border-radius:4px;">❌</button>
+        </div>
+        <div class="popup-body">
+            <label>Kilometraj curent (KM) *</label>
+            <input type="number" id="inputKM" placeholder="Ex: 184500">
+            
+            <div style="position: relative; text-align: left;">
+                <label>Tipul interventiei / Lucrare executata *</label>
+                <input type="text" id="inputDescriere" autocomplete="off" placeholder="Ex: Schimb filtre, discuri frana...">
+                <div id="sugestii-descriere-container" style="position: absolute; top: 85%; left: 0; right: 0; background: white; border: 1px solid #CCC; border-radius: 0 0 6px 6px; max-height: 200px; overflow-y: auto; z-index: 9999; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.15);"></div>
+            </div>
+
+            <label>Piese folosite / Producatori</label>
+            <input type="text" id="inputPiese" placeholder="Ex: Filtre MANN, Ulei Motul 5W30">
+
+            <div style="display:flex; gap:10px;">
+                <div style="flex:1;">
+                    <label>Cost Piese (RON)</label>
+                    <input type="number" id="inputCostPiese" placeholder="0">
+                </div>
+                <div style="flex:1;">
+                    <label>Cost Manopera (RON)</label>
+                    <input type="number" id="inputCostManopera" placeholder="0">
+                </div>
+            </div>
+
+            <div style="display:flex; gap:10px;">
+                <div style="flex:1;">
+                    <label>Urmatoarea revizie (KM)</label>
+                    <input type="number" id="inputUrmatorKm" placeholder="Ex: 194500">
+                </div>
+                <div style="flex:1;">
+                    <label>Urmatoarea revizie (Data)</label>
+                    <input type="text" id="inputUrmatoareaData" placeholder="Ex: mai 2027">
+                </div>
+            </div>
+
+            <label>Observatii suplimentare / Recomandari</label>
+            <textarea id="inputObservatii" rows="2" placeholder="Ex: Urmeaza schimbul..."></textarea>
+
+            <button class="btn-primary" style="background:#388E3C; margin-top:10px;" onclick="salveazaLucrareNoua()">💾 Salveaza in Istoric</button>
+        </div>
+    </div>
+
+    <div id="drawerOverlay" onclick="toggleDrawer(false)"></div>
+    <div id="drawerMenu">
+        <img src="logo.png" alt="CarID Logo" style="display:block; margin: 0 auto 10px auto; max-width: 80px; height: auto;" onerror="this.style.display='none';">
+        <h3 style="text-align:center; margin-top:0; margin-bottom:20px; color:#1565C0;">Meniu CarID</h3>
+        <button class="btn-secondary" onclick="toggleDrawer(false); navigateTo('home-page');">🛠️ Ecran Principal</button>
+        <button class="btn-secondary" onclick="toggleDrawer(false); navigateTo('garaj-page');">🛠️ Garajul Meu</button>
+    </div>
+
+    <div id="actionMenuOverlay" onclick="lockMeniuActiuni()"></div>
+    <div id="actionSheetMenu">
+        <h3 style="margin-top:0; border-bottom:1px solid #EEE; padding-bottom:10px; color:#1565C0;">📋 Actiuni Rapide</h3>
+        <div id="optiuni-proprietar-web">
+            <button class="btn-secondary" onclick="afiseazaStatusDocument('itp')">📅 Verifica / Schimba data ITP</button>
+            <button class="btn-secondary" onclick="afiseazaStatusDocument('rca')">🛡️ Verifica / Schimba data RCA</button>
+            <button class="btn-secondary" onclick="afiseazaStatusDocument('rovinieta')">🛣️ Verifica / Schimba Rovinieta</button>
+        </div>
+        <button class="btn-secondary" onclick="afiseazaSpecificatiiWeb()">🛢️ Specificatii Ulei & Anvelope</button>
+        <button class="btn-secondary" onclick="deschideCalculatorConsum()">🧮 Calculator Consum Mediu</button>
+        <button class="btn-secondary" onclick="partajeazaVinWeb()">🔗 Copiaza / Partajeaza VIN</button>
+        <button class="btn-primary" style="background:#C62828; margin-top:15px;" onclick="lockMeniuActiuni()">Inchide Meniu</button>
+    </div>
+
+    <div style="position:fixed; bottom:20px; right:20px; z-index:900;">
+        <button onclick="toggleDrawer(true)" style="width:55px; height:55px; border-radius:50%; background:#1565C0; color:white; font-size:24px; display:flex; align-items:center; justify-content:center; padding:0; margin:0;">☰</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, set, get, push, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAD1-X7o_jzV5OjjA3p341VMP-wWsnjjmg",
+            authDomain: "carid-eae71.firebaseapp.com",
+            databaseURL: "https://carid-eae71-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "carid-eae71",
+            storageBucket: "carid-eae71.firebasestorage.app",
+            messagingSenderId: "571042772219",
+            appId: "1:571042772219:web:925420319b3e8b898bac5e"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        let html5QrcodeScanner = null;
+        let esteProprietarMod = false;
+        let vinCurent = "";
+        let listaLucrariCompleta = [];
+        let canvasFinalPentruSalvare = null;
+        let vinCurentQR = "";
+        let deferredPrompt = null;
+
+        const SUGESTII_LUCRARI = [
+            "Revizie completa (Ulei + 4 filtre)", "Schimb ulei motor", "Schimb filtru ulei", "Schimb filtru aer", "Schimb filtru habitaclu (polen)", "Schimb filtru combustibil", "Schimb lichid de frana", "Schimb antigel / Curatare instalatie", "Schimb ulei cutie de viteze manuala", "Schimb ulei cutie automata (Metoda prin cadere)", "Schimb ulei cutie automata (Aparat / Dinamic)", "Schimb ulei diferential", "Schimb ulei cutie de transfer (4x4)", "Resetare interval service / Ulei",
+            "Schimb placute frana fata", "Schimb placute frana spate", "Schimb discuri si placute frana fata", "Schimb discuri si placute frana spate", "Schimb lichid frana + Aerisire sistem", "Schimb etrier frana", "Reconditionare etrier (Garnituri + Piston)", "Schimb cablu frana de mana", "Reglaj frana de mana", "Schimb senzori uzura placute", "Schimb furtunuri frana (flexibile)", "Schimb pompa centrala de frana",
+            "Schimb amortizoare fata", "Schimb amortizoare spate", "Schimb arcuri suspensie fata", "Schimb arcuri suspensie spate", "Schimb flanse amortizor", "Schimb bielete antiruliu fata", "Schimb bielete antiruliu spate", "Schimb bucse bara stabilizatoare", "Schimb brat suspensie / Pivot fata", "Schimb brat suspensie / Bucse spate", "Schimb pivoti directie", "Schimb capat de bara", "Schimb bieleta directie", "Schimb caseta de directie", "Schimb pompa servo-directie", "Schimb rulment roata fata", "Schimb rulment roata spate", "Geometrie roti (Unghi fuga)",
+            "Schimb kit distributie (Curea + Role + Pompa apa)", "Schimb kit distributie pe lant", "Schimb curea accesorii (Transmisie)", "Schimb intinzator / Role curea accesorii", "Schimb pompa de apa", "Schimb termostat", "Schimb garnitura capac culbutori", "Schimb garnitura chiulasa", "Rectificare chiulasa / Schimb simeringuri supape", "Schimb garnitura baie ulei", "Schimb suport motor (Tampon fata/spate)", "Schimb suport cutie de viteze", "Curatare/Inlocuire clapeta acceleratie", "Masurare compresie cilindri",
+            "Schimb injectoare (Set)", "Curatare / Calibrare injectoare", "Schimb saibe foc injectoare", "Schimb pompa inalta presiune (HPFP)", "Schimb pompa combustibil din rezervor", "Schimb rampa injectie / Senzor presiune", "Schimb bujii incandescente (Diesel)", "Schimb bujii scanteie (Benzina)", "Schimb fise / Bobine inductie",
+            "Curatare chimica filtru de particule (DPF)", "Schimb senzor presiune diferentiala DPF", "Completare lichid AdBlue / Cerina", "Schimb senzor NOx", "Anulare / Curatare valva EGR", "Schimb valva EGR", "Schimb sonda Lambda", "Schimb racord flexibil evacuare", "Schimb toba esapament (Finala/Medie)",
+            "Schimb kit ambreiaj complet (Placa + Disc + Rulment)", "Schimb kit ambreiaj + Volanta cu masa dubla", "Schimb cilindru receptor / Pompa ambreiaj", "Schimb planetara completa", "Schimb kit burduf planetara (Spre roata/cutie)", "Schimb racord flexibil cardan (Flansa)", "Schimb rulment intermediar cardan",
+            "Igienizare sistem climatizare (Ozon / Spray)", "Reincarcare freon auto (R134a)", "Reincarcare freon auto (R1234yf)", "Schimb compresor aer conditionat", "Schimb radiator clima (Condensator)", "Schimb radiator racire motor", "Schimb electroventilator",
+            "Diagnoza computerizata / Citire erori", "Stergere erori / Interpretare parametri in timp real", "Schimb baterie auto + Inregistrare (Codare)", "Schimb alternator", "Schimb electromotor (Demaror)", "Schimb senzori motor (Ax cu came / Arbore / ABS)", "Reparatie cablaj electric", "Reglaj faruri", "Schimb becuri / Kit Xenon / LED",
+            "Schimb turbosuflanta (Turbina)", "Reconditionare turbosuflanta", "Schimb actuator turbina (Electric/Vacuumatic)", "Curatare galerie admisie / Clapete swirl", "Schimb radiator intercooler", "Schimb furtun intercooler (Presiune)"
+        ];
+
+        window.navigateTo = function(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            if (pageId !== 'home-page') opresteScanner();
+            if (pageId === 'garaj-page') incarcaGarajLocal();
+            
+            // Inchide pop-up-ul automat daca schimbam pagina
+            toggleFormPopup(false);
+        };
+
+        window.toggleDrawer = function(open) {
+            document.getElementById('drawerMenu').classList.toggle('open', open);
+            document.getElementById('drawerOverlay').style.display = open ? 'block' : 'none';
+        };
+
+        // Functia pentru deschiderea/inchiderea Pop-up-ului de adaugare lucrare
+        window.toggleFormPopup = function(show) {
+            const container = document.getElementById('formPopupContainer');
+            const overlay = document.getElementById('formPopupOverlay');
+            if(show) {
+                container.classList.add('open');
+                overlay.style.display = 'block';
+                // Initializeaza sugestiile cand se deschide formularul
+                initializeazaAutocompleteDescriere();
+            } else {
+                container.classList.remove('open');
+                overlay.style.display = 'none';
+            }
+        };
+
+        window.setRol = function(rol) {
+            esteProprietarMod = (rol === 'proprietar');
+            document.getElementById('scanner-container').style.display = 'block';
+            
+            html5QrcodeScanner = new Html5Qrcode("reader");
+            html5QrcodeScanner.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: 250 },
+                window.proceseazaCodScanat,
+                () => {}
+            ).catch(err => alert("Eroare acces camera: " + err));
+        };
+
+        window.opresteScanner = function() {
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.stop().then(() => {
+                    document.getElementById('scanner-container').style.display = 'none';
+                    html5QrcodeScanner = null;
+                }).catch(e => console.log(e));
+            }
+        };
+
+        window.proceseazaCodScanat = function(textScanat) {
+            let vinCurat = textScanat.trim();
+            
+            if (vinCurat.includes("?vin=")) {
+                const urlParams = new URLSearchParams(vinCurat.substring(vinCurat.indexOf('?')));
+                vinCurat = urlParams.get('vin') || "";
+            } else if (vinCurat.startsWith("VIN:")) {
+                vinCurat = vinCurat.replace("VIN:", "").trim();
+            }
+            
+            vinCurat = vinCurat.toUpperCase();
+
+            if (vinCurat.length === 17) {
+                opresteScanner();
+                if (esteProprietarMod) {
+                    let vreaSalvare = confirm(`🚗 Vehicul detectat (${vinCurat})!\n\nDoresti sa SALVEZI aceasta masina in Garajul tau pentru acces rapid?`);
+                    if (vreaSalvare) {
+                        salveazaInGarajLocal(vinCurat);
+                    }
+                }
+                deschideDetalii(vinCurat);
+            } else {
+                alert("Codul QR nu contine un VIN valid de 17 caractere!");
+            }
+        };
+
+        function salveazaInGarajLocal(vin) {
+            try {
+                let garaj = JSON.parse(localStorage.getItem('garaj_carid')) || [];
+                if (!garaj.includes(vin)) {
+                    garaj.push(vin);
+                    localStorage.setItem('garaj_carid', JSON.stringify(garaj));
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function incarcaGarajLocal() {
+            const containerGaraj = document.getElementById('lista-garaj');
+            if (!containerGaraj) return; 
+            containerGaraj.innerHTML = "";
+            let garaj = JSON.parse(localStorage.getItem('garaj_carid')) || [];
+
+            if (garaj.length === 0) {
+                containerGaraj.innerHTML = `<p style="color: #757575; font-style: italic; text-align: center; margin-top: 15px;">Nicio masina salvata in garaj. Scaneaza un cod QR pentru a adauga.</p>`;
+                return;
+            }
+
+            garaj.forEach(vin => {
+                const cardMasina = document.createElement('div');
+                cardMasina.style.cssText = "background: #1565C0; color: white; padding: 15px; margin: 10px 0; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2); font-weight: bold; cursor: pointer;";
+                cardMasina.onclick = function(e) {
+                    if(e.target.tagName === 'BUTTON') return;
+                    esteProprietarMod = true;
+                    deschideDetalii(vin);
+                };
+                cardMasina.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span>🚘</span>
+                        <span style="font-size: 15px; letter-spacing: 1px; font-family: monospace;">${vin}</span>
                     </div>
+                    <button onclick="stergeDinGaraj('${vin}')" style="background: transparent; border: none; color: white; font-size: 1.2rem; cursor: pointer; padding: 5px;">🗑️</button>
+                `;
+                containerGaraj.appendChild(cardMasina);
+            });
+        }
 
-                <button onclick="deschideFormularLucrare(true)" style="position:absolute; bottom:20px; right:20px; width:60px; height:60px; background:#2E7D32; color:white; border:none; border-radius:50%; font-size:2rem; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center; z-index:99;">
-                    +
-                </button>
-            </div>
-        </div>
-    </div>
+        window.stergeDinGaraj = function(vin) {
+            if (confirm(`Sigur vrei sa stergi masina cu VIN-ul ${vin}?`)) {
+                let garaj = JSON.parse(localStorage.getItem('garaj_carid')) || [];
+                garaj = garaj.filter(item => item !== vin);
+                localStorage.setItem('garaj_carid', JSON.stringify(garaj));
+                incarcaGarajLocal();
+            }
+        };
 
-    <div id="generator-page" class="page">
-        <header style="background:#1A237E; color:white; padding:15px; display:flex; align-items:center; justify-content:space-between;">
-            <button onclick="navigateTo('home-page')" style="background:transparent; border:none; color:white; font-size:1.4rem; cursor:pointer;">🏠</button>
-            <h3 style="margin:0;">Generator CarID</h3>
-            <div style="width:24px;"></div>
-        </header>
-        <div style="flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:15px;">
-            <input type="text" id="inputVIN_Client" placeholder="Introdu seria de șasiu (VIN din 17 caractere) *" class="custom-input" style="text-transform:uppercase;" maxlength="17">
-            <input type="number" id="inputPIN_Securitate" placeholder="Setați un PIN din 4 cifre *" class="custom-input" pattern="[0-9]*" inputmode="numeric" oninput="if(this.value.length>4) this.value=this.value.slice(0,4);">
-            <input type="number" id="inputPIN_Confirmare" placeholder="Confirmați PIN-ul de 4 cifre *" class="custom-input" pattern="[0-9]*" inputmode="numeric" oninput="if(this.value.length>4) this.value=this.value.slice(0,4);">
-            <button onclick="genereazaCodQRWeb()" class="custom-button" style="background:#1565C0;">Generează Cod QR Securizat</button>
+        function deschideDetalii(vin) {
+            vinCurent = vin;
+            document.getElementById('vin-title').innerText = "VIN: " + vin;
+            document.getElementById('etPin').value = "";
             
-            <div id="qrContainer" style="display:none; flex-direction:column; align-items:center; margin-top:15px; background:white; padding:15px; border-radius:8px; border:1px solid #DDD;">
-                <div id="imgQRCode" style="width:100%; max-width:260px; margin-bottom:15px;"></div>
-                <div style="display:flex; gap:10px; width:100%;">
-                    <button onclick="salveazaInGalerieWeb()" style="flex:1; background:#43A047; color:white; border:none; padding:12px; border-radius:6px; font-weight:bold; cursor:pointer;">💾 Descarcă</button>
-                    <button onclick="partajeazaQRWeb()" style="flex:1; background:#0288D1; color:white; border:none; padding:12px; border-radius:6px; font-weight:bold; cursor:pointer;">🔗 Trimite QR</button>
-                </div>
-            </div>
-        </div>
-    </div>
+            const btnPlutitor = document.getElementById('btnDeschideFormular');
+            const ecranPin = document.getElementById('ecran-pin-blocat');
+            const continutMasina = document.getElementById('continut-detalii-masina');
 
-    <div id="overlayFormular" onclick="deschideFormularLucrare(false)" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:998; transition: opacity 0.3s;"></div>
-    <div id="bottomSheetFormular" style="position:fixed; bottom:-100%; left:0; width:100%; max-height:85vh; background:white; border-top-left-radius:20px; border-top-right-radius:20px; z-index:999; box-shadow:0 -5px 15px rgba(0,0,0,0.2); transition: bottom 0.3s ease-out; display:flex; flex-direction:column;">
-        <div style="padding:15px; border-bottom:1px solid #EEE; display:flex; justify-content:space-between; align-items:center; background:#1A237E; color:white; border-top-left-radius:16px; border-top-right-radius:16px;">
-            <h3 style="margin:0; font-size:16px;">🔧 Înregistrare Intervenție Nouă</h3>
-            <button onclick="deschideFormularLucrare(false)" style="background:transparent; border:none; color:white; font-size:1.3rem; cursor:pointer;">✕</button>
-        </div>
-        <div style="overflow-y:auto; padding:20px; flex:1; display:flex; flex-direction:column; gap:12px;">
-            <input type="number" id="inputKM" placeholder="Kilometri actuali (ex: 184500) *" class="custom-input">
-            <div style="position:relative; width:100%;">
-                <input type="text" id="inputDescriere" placeholder="Tipul intervenției (ex: Schimb ulei motor) *" class="custom-input" autocomplete="off">
-                <div id="sugestii-descriere-container" style="display:none; position:absolute; top:100%; left:0; width:100%; background:white; border:1px solid #CCC; max-height:180px; overflow-y:auto; z-index:1000; box-shadow:0 4px 6px rgba(0,0,0,0.1);"></div>
-            </div>
-            <input type="text" id="inputPiese" placeholder="Piese și consumabile utilizate..." class="custom-input">
-            <div style="display:flex; gap:10px;">
-                <input type="number" id="inputCostPiese" placeholder="Cost Piese (RON)" class="custom-input" style="flex:1;">
-                <input type="number" id="inputCostManopera" placeholder="Cost Manoperă (RON)" class="custom-input" style="flex:1;">
-            </div>
-            <div style="background:#E8EAF6; padding:8px 12px; border-radius:6px; font-weight:bold; font-size:13px; color:#1A237E;">📅 URMATOARELE VERIFICARI RECOMANDATE:</div>
-            <div style="display:flex; gap:10px;">
-                <input type="number" id="inputUrmatorKm" placeholder="La KM (ex: 199500)" class="custom-input" style="flex:1;">
-                <input type="text" id="inputUrmatoareaData" placeholder="La Data (DD.MM.YYYY)" class="custom-input" style="flex:1;">
-            </div>
-            <textarea id="inputObservatii" placeholder="Alte observații, defecte depistate sau note administrative..." rows="2" class="custom-input" style="font-family:sans-serif; resize:none;"></textarea>
-            <button onclick="salveazaLucrareNouaModificata()" class="custom-button" style="background:#2E7D32; margin-top:5px;">💾 Salvează în Istoric Live</button>
-        </div>
-    </div>
+            if (esteProprietarMod) {
+                btnPlutitor.style.display = 'none';
+                ecranPin.style.display = 'flex';
+                continutMasina.style.display = 'none';
+            } else {
+                btnPlutitor.style.display = 'flex'; // Arata butonul de plus (+) pentru mecanic
+                ecranPin.style.display = 'none';
+                continutMasina.style.display = 'block';
+                incarcaIstoric();
+            }
+            navigateTo('details-page');
+        }
 
-    <div id="actionMenuOverlay" onclick="lockMeniuActiuni()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); z-index:1002;"></div>
-    <div id="actionSheetMenu" style="display:none; position:fixed; bottom:0; left:0; width:100%; background:white; border-top-left-radius:16px; border-top-right-radius:16px; z-index:1003; padding:15px; box-sizing:border-box; box-shadow:0 -4px 10px rgba(0,0,0,0.15);">
-        <h4 style="margin:5px 0 15px 0; text-align:center; color:#555;">Opțiuni Vehicul</h4>
-        <div style="display:flex; flex-direction:column; gap:8px;">
-            <button onclick="afiseazaSpecificatiiWeb()" style="width:100%; padding:12px; background:#ECEFF1; border:none; border-radius:6px; text-align:left; font-weight:600; cursor:pointer;">🛢️ Specificații Ulei & Anvelope</button>
-            <button onclick="deschideCalculatorConsum()" style="width:100%; padding:12px; background:#ECEFF1; border:none; border-radius:6px; text-align:left; font-weight:600; cursor:pointer;">🧮 Calculator Consum Mediu</button>
-            <button onclick="partajeazaVinWeb()" style="width:100%; padding:12px; background:#ECEFF1; border:none; border-radius:6px; text-align:left; font-weight:600; cursor:pointer;">🔗 Distribuie Seria de Șasiu (VIN)</button>
-            <div id="optiuni-proprietar-web" style="display:none; flex-direction:column; gap:8px; width:100%; margin-top:5px; border-top:1px solid #EEE; padding-top:10px;">
-                <button onclick="afiseazaStatusDocument('itp')" style="width:100%; padding:12px; background:#FFF3E0; border:1px solid #FFE0B2; border-radius:6px; text-align:left; font-weight:600; color:#E65100; cursor:pointer;">📅 Actualizează Valabilitate ITP</button>
-                <button onclick="afiseazaStatusDocument('rca')" style="width:100%; padding:12px; background:#FFF3E0; border:1px solid #FFE0B2; border-radius:6px; text-align:left; font-weight:600; color:#E65100; cursor:pointer;">📅 Actualizează Valabilitate RCA</button>
-            </div>
-            <button onclick="lockMeniuActiuni()" style="width:100%; padding:12px; background:#CFD8DC; border:none; border-radius:6px; font-weight:bold; cursor:pointer; margin-top:5px;">Închide Meniu</button>
-        </div>
-    </div>
+        window.verificaPinWeb = function() {
+            const pinIntrodus = document.getElementById('etPin').value.trim();
+            get(ref(db, `Masini/${vinCurent}/pin`)).then((snapshot) => {
+                if (snapshot.exists() && snapshot.val().toString() === pinIntrodus) {
+                    document.getElementById('ecran-pin-blocat').style.display = 'none';
+                    document.getElementById('continut-detalii-masina').style.display = 'block';
+                    incarcaIstoric();
+                } else {
+                    alert("PIN Incorect! Acces refuzat.");
+                    document.getElementById('etPin').value = "";
+                }
+            });
+        };
 
-    <script type="module" src="app.js"></script>
+        function incarcaIstoric() {
+            get(ref(db, `Masini/${vinCurent}/lucrari`)).then((snapshot) => {
+                listaLucrariCompleta = [];
+                if (snapshot.exists()) {
+                    snapshot.forEach((child) => {
+                        let l = child.val();
+                        l.id = child.key;
+                        listaLucrariCompleta.push(l);
+                    });
+                    listaLucrariCompleta.sort((a, b) => parseInt(b.km || 0) - parseInt(a.km || 0));
+                }
+                filtreazaLucrari("");
+                actualizeazaSemafor();
+            });
+        }
+
+        window.filtreazaLucrari = function(query) {
+            const q = query.toLowerCase();
+            const container = document.getElementById('istoric-lucrari-container');
+            container.innerHTML = "";
+            const filtrate = listaLucrariCompleta.filter(l => (l.descriere && l.descriere.toLowerCase().includes(q)) || (l.km && l.km.toString().includes(q)));
+
+            filtrate.forEach(l => {
+                const card = document.createElement('div');
+                card.style.cssText = "background: #FFF; padding: 12px; margin-bottom: 8px; border-radius: 6px; border: 1px solid #E0E0E0;";
+                let topHeader = `<div style="display: flex; justify-content: space-between; align-items: center; width:100%;"><span style="color:#000; font-weight:bold; font-size:16px;">${l.data} - ${l.km} KM</span>`;
+                if (!esteProprietarMod) topHeader += `<button onclick="stergeLucrare('${l.id}')" style="background:transparent; border:none; font-size:1.2rem; cursor:pointer;">🗑️</button>`;
+                topHeader += `</div>`;
+                let piese = l.piese ? `<div style="color:#555; font-style:italic; font-size:14px; margin-top:2px;">Piese: ${l.piese}</div>` : '';
+                let cost = (l.cost && l.cost !== "0") ? `<div style="color:#388E3C; font-weight:bold; font-size:14px; margin-top:2px;">Cost: ${l.cost} RON</div>` : '';
+                let rem = (l.urmatorKm || l.urmatoareaData) ? `<div style="color:#1A237E; font-size:13px; font-weight:500; margin-top:4px;">Urmatoarea: ${l.urmatorKm || ''} KM / ${l.urmatoareaData || ''}</div>` : '';
+                let obs = l.observatii ? `<div style="color:#757575; font-size:12px; margin-top:2px;">Note: ${l.observatii}</div>` : '';
+                card.innerHTML = `${topHeader} <div style="color:#333; font-size:15px; margin-top:4px; font-weight:500;">${l.descriere}</div> ${piese} ${cost} ${rem} ${obs}`;
+                container.appendChild(card);
+            });
+        };
+
+        window.initializeazaAutocompleteDescriere = function() {
+            const inputDesc = document.getElementById('inputDescriere');
+            const containerSugestii = document.getElementById('sugestii-descriere-container');
+            if (!inputDesc || !containerSugestii) return;
+
+            document.addEventListener('click', function(e) {
+                if (e.target !== inputDesc && e.target !== containerSugestii) containerSugestii.style.display = 'none';
+            });
+
+            inputDesc.addEventListener('input', function() {
+                const valoare = this.value.toLowerCase().trim();
+                containerSugestii.innerHTML = '';
+                if (!valoare) { containerSugestii.style.display = 'none'; return; }
+                const filtrate = SUGESTII_LUCRARI.filter(lucrare => lucrare.toLowerCase().includes(valoare)).slice(0, 6);
+                if (filtrate.length === 0) { containerSugestii.style.display = 'none'; return; }
+
+                filtrate.forEach(lucrare => {
+                    const item = document.createElement('div');
+                    item.style.cssText = "padding: 12px; cursor: pointer; border-bottom: 1px solid #EEE; color: #333; font-size: 14px; font-weight: 500; text-align: left;";
+                    const index = lucrare.toLowerCase().indexOf(valoare);
+                    item.innerHTML = lucrare.substring(0, index) + "<strong>" + lucrare.substring(index, index + valoare.length) + "</strong>" + lucrare.substring(index + valoare.length);
+                    item.addEventListener('click', function() { inputDesc.value = lucrare; containerSugestii.style.display = 'none'; });
+                    containerSugestii.appendChild(item);
+                });
+                containerSugestii.style.display = 'block';
+            });
+        };
+
+        window.salveazaLucrareNoua = function() {
+            const km = document.getElementById('inputKM').value.trim();
+            let desc = document.getElementById('inputDescriere').value.trim();
+            const piese = document.getElementById('inputPiese').value.trim();
+            const costP = parseFloat(document.getElementById('inputCostPiese').value) || 0;
+            const costM = parseFloat(document.getElementById('inputCostManopera').value) || 0;
+            const urmatorKm = document.getElementById('inputUrmatorKm').value.trim();
+            const urmatoareData = document.getElementById('inputUrmatoareaData').value.trim();
+            const obs = document.getElementById('inputObservatii').value.trim();
+
+            if (!km || !desc) { alert("Kilometrii si Tipul interventiei sunt obligatorii!"); return; }
+            if (desc.length > 0) desc = desc.charAt(0).toUpperCase() + desc.slice(1);
+            const costTotalStr = (costP + costM).toString();
+            const dataAzi = new Date().toLocaleDateString('ro-RO');
+
+            const nouaLucrare = { km, descriere: desc, piese, cost: costTotalStr, urmatorKm, urmatoareaData, observatii: obs, data: dataAzi };
+            
+            push(ref(db, `Masini/${vinCurent}/lucrari`), nouaLucrare).then(() => {
+                alert("Lucrare salvata cu succes!");
+                document.getElementById('inputKM').value = ""; document.getElementById('inputDescriere').value = ""; document.getElementById('inputPiese').value = "";
+                document.getElementById('inputCostPiese').value = ""; document.getElementById('inputCostManopera').value = ""; document.getElementById('inputUrmatorKm').value = "";
+                document.getElementById('inputUrmatoareaData').value = ""; document.getElementById('inputObservatii').value = "";
+                
+                toggleFormPopup(false); // Inchide pop-up-ul dupa salvare
+                incarcaIstoric();
+            }).catch((error) => {
+                alert("Eroare la salvare: " + error.message);
+            });
+        };
+
+        window.stergeLucrare = function(id) {
+            if (confirm("Sigur vrei sa stergi aceasta inregistrare?")) remove(ref(db, `Masini/${vinCurent}/lucrari/${id}`)).then(() => incarcaIstoric());
+        };
+
+        function actualizeazaSemafor() {
+            const semafor = document.getElementById('cardStatus');
+            const txt = document.getElementById('tvStatusRevizie');
+            if (listaLucrariCompleta.length > 0) {
+                semafor.style.backgroundColor = "#4CAF50";
+                txt.innerText = `Sisteme Verificate. Ultima revizie: ${listaLucrariCompleta[0].km} KM`;
+            } else {
+                semafor.style.backgroundColor = "#FF6D00"; txt.innerText = "Nicio lucrare inregistrata in istoric.";
+            }
+        }
+
+        // MENIURI EXTRA MODALE
+        window.deschideMeniuActiuni = function() {
+            document.getElementById('actionSheetMenu').style.display = 'block';
+            document.getElementById('actionMenuOverlay').style.display = 'block';
+        };
+
+        window.lockMeniuActiuni = function() {
+            document.getElementById('actionSheetMenu').style.display = 'none';
+            document.getElementById('actionMenuOverlay').style.display = 'none';
+        };
+    </script>
 </body>
 </html>
