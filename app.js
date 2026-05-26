@@ -81,7 +81,8 @@ window.proceseazaCodScanat = function(textScanat) {
         const urlParams = new URLSearchParams(vinCurat.substring(vinCurat.indexOf('?')));
         vinCurat = urlParams.get('vin') || "";
     } else if (vinCurat.startsWith("VIN:")) {
-        vinCurat = vinCurat.replace("VIN:", "").trim();
+        const vinIndex = vinCurat.indexOf(":") + 1;
+        vinCurat = vinCurat.substring(vinIndex).trim();
     }
     vinCurat = vinCurat.toUpperCase();
 
@@ -191,7 +192,12 @@ function incarcaIstoric() {
                 l.id = child.key;
                 listaLucrariCompleta.push(l);
             });
-            listaLucrariCompleta.sort((a, b) => parseInt(b.km || 0) - parseInt(a.km || 0));
+            // Sortare inteligenta care elimina caracterele non-numerice (ex: spatii, puncte) inainte de sortare
+            listaLucrariCompleta.sort((a, b) => {
+                const kmA = parseInt(String(a.km).replace(/\D/g, '')) || 0;
+                const kmB = parseInt(String(b.km).replace(/\D/g, '')) || 0;
+                return kmB - kmA;
+            });
         }
         filtreazaLucrari("");
         actualizeazaSemafor();
@@ -237,7 +243,6 @@ window.initializeazaAutocompleteDescriere = function() {
         containerSugestii.innerHTML = '';
         if (!valoare) { containerSugestii.style.display = 'none'; return; }
         
-        // Filtrare fara batai de cap legate de diacritice
         const filtrate = SUGESTII_LUCRARI.filter(lucrare => 
             normalizeazaText(lucrare).includes(valoare)
         ).slice(0, 6);
@@ -423,6 +428,17 @@ function verificaDacaVineDinScanareDirecta() {
     }
 }
 
-// Pornire automata
+// ==========================================
+// EXECUTIE INIȚIALĂ ȘI SUPORT PWA
+// ==========================================
 verificaDacaVineDinScanareDirecta();
 window.initializeazaAutocompleteDescriere();
+
+// Înregistrarea Service Worker-ului pentru funcționarea Offline și instalare PWA
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('CarID PWA: Service Worker înregistrat cu succes! Domeniu:', reg.scope))
+            .catch(err => console.error('CarID PWA: Eroare la înregistrarea Service Worker-ului:', err));
+    });
+}
