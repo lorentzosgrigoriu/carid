@@ -600,36 +600,52 @@
         };
 
         // ALGORITM INTELIGENT DE AUTOCOMPLETARE PENTRU URMATOAREA REVIZIE
-        window.calculAutocompletareRevizie = function() {
-            const kmCurenti = parseInt(document.getElementById('inputKM').value);
-            const descriere = document.getElementById('inputDescriere').value.toLowerCase();
-            
-            const inputUrmatorKm = document.getElementById('inputUrmatorKm');
-            const inputUrmatoareaData = document.getElementById('inputUrmatoareaData');
+       window.calculAutocompletareRevizie = function() {
+    const kmCurenti = parseInt(document.getElementById('inputKM').value);
+    const descriere = document.getElementById('inputDescriere').value.toLowerCase();
+    
+    const inputUrmatorKm = document.getElementById('inputUrmatorKm');
+    const inputUrmatoareaData = document.getElementById('inputUrmatoareaData');
 
-            if (!kmCurenti || isNaN(kmCurenti)) return;
+    if (!kmCurenti || isNaN(kmCurenti)) return;
 
-            // 1. Cazul pentru Revizii Standard (Ulei / Filtre) -> De regula +10.000 KM sau +1 An
-            if (descriere.includes("revizie") || descriere.includes("ulei") || descriere.includes("filtr")) {
-                inputUrmatorKm.value = kmCurenti + 10000;
-                
-                // Calcul data peste exact un an
-                const dataSelectata = new Date(document.getElementById('inputDataLucrare').value || new Date());
-                dataSelectata.setMonth(dataSelectata.getMonth() + 12);
-                const luni = ["ianuarie", "februarie", "martie", "aprilie", "mai", "iunie", "iulie", "august", "septembrie", "octombrie", "noiembrie", "decembrie"];
-                inputUrmatoareaData.value = `${luni[dataSelectata.getMonth()]} ${dataSelectata.getFullYear()}`;
-            } 
-            // 2. Cazul pentru Distributie -> De regula +60.000 KM sau +5 Ani
-            else if (descriere.includes("distributie") || descriere.includes("curea dist") || descriere.includes("lant")) {
-                inputUrmatorKm.value = kmCurenti + 60000;
-                
-                const dataSelectata = new Date(document.getElementById('inputDataLucrare').value || new Date());
-                const anulViitor = dataSelectata.getFullYear() + 5;
-                const luni = ["ianuarie", "februarie", "martie", "aprilie", "mai", "iunie", "iulie", "august", "septembrie", "octombrie", "noiembrie", "decembrie"];
-                inputUrmatoareaData.value = `${luni[dataSelectata.getMonth()]} ${anulViitor}`;
-            }
-        };
+    // Data pentru calcul
+    const dataRef = new Date(document.getElementById('inputDataLucrare').value || new Date());
+    const luni = ["ianuarie", "februarie", "martie", "aprilie", "mai", "iunie", "iulie", "august", "septembrie", "octombrie", "noiembrie", "decembrie"];
 
+    // 1. REVIZIE ULEI ȘI FILTRE (Motor + Gaz) - 10.000 KM / 1 AN
+    // Trigger: revizie, ulei, filtru, gpl, gaz, motorina, benzina
+    if (/revizie|ulei|filtru|gpl|gaz|instalatie gpl|ulei motor|ulei cutie|mentenanta/i.test(descriere)) {
+        inputUrmatorKm.value = kmCurenti + 10000;
+        dataRef.setMonth(dataRef.getMonth() + 12);
+        inputUrmatoareaData.value = `${luni[dataRef.getMonth()]} ${dataRef.getFullYear()}`;
+    }
+
+    // 2. DISTRIBUȚIE ȘI ANEXE - 60.000 KM / 5 ANI
+    // Trigger: distributie, lant, curea transmisie, accesorii, pompa apa, intinzator
+    else if (/distributie|lant|curea accesorii|pompa apa|kit distributie|transmisie|role/i.test(descriere)) {
+        inputUrmatorKm.value = kmCurenti + 60000;
+        dataRef.setFullYear(dataRef.getFullYear() + 5);
+        inputUrmatoareaData.value = `${luni[dataRef.getMonth()]} ${dataRef.getFullYear()}`;
+    }
+
+    // 3. BUJII ȘI APRINDERE - 30.000 KM / 2 ANI
+    // Trigger: bujii, fise, bobine, incandescenta, scanteie
+    else if (/bujii|fise|bobina|aprindere|bujie/i.test(descriere)) {
+        inputUrmatorKm.value = kmCurenti + 30000;
+        dataRef.setFullYear(dataRef.getFullYear() + 2);
+        inputUrmatoareaData.value = `${luni[dataRef.getMonth()]} ${dataRef.getFullYear()}`;
+    }
+
+    // 4. LICHIDE (Frână / Antigel / Direcție) - 2 ANI
+    // Trigger: antigel, lichid frana, servo, lichid racire
+    else if (/antigel|lichid frana|lichid racire|servo|frana/i.test(descriere)) {
+        inputUrmatorKm.value = kmCurenti + 40000;
+        dataRef.setFullYear(dataRef.getFullYear() + 2);
+        inputUrmatoareaData.value = `${luni[dataRef.getMonth()]} ${dataRef.getFullYear()}`;
+    }
+};
+        
         window.initializeazaAutocompleteDescriere = function() {
             const inputDesc = document.getElementById('inputDescriere');
             const containerSugestii = document.getElementById('sugestii-descriere-container');
