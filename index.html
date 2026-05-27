@@ -173,8 +173,16 @@
                 
                 <button type="button" class="btn-primary" style="background-color:#1565C0; margin-bottom:20px;" onclick="deschideModalIstoric()">📋 Vezi Istoric Lucrări</button>
                 
-                <label>Kilometraj curent (KM) *</label>
-                <input type="number" id="inputKM" placeholder="Ex: 184500">
+                <div style="display:flex; gap:10px;">
+                    <div style="flex:1;">
+                        <label>Kilometraj curent (KM) *</label>
+                        <input type="number" id="inputKM" placeholder="Ex: 184500" oninput="window.calculAutocompletareRevizie()">
+                    </div>
+                    <div style="flex:1;">
+                        <label>Data Intervenției *</label>
+                        <input type="date" id="inputDataLucrare">
+                    </div>
+                </div>
                 
                 <div style="position: relative; text-align: left;">
                     <label>Tipul interventiei / Lucrare executata *</label>
@@ -253,7 +261,7 @@
 
         <button class="btn-secondary" onclick="afiseazaSpecificatiiWeb()">🛢️ Specificatii Ulei & Anvelope</button>
         <button class="btn-secondary" onclick="deschideCalculatorConsum()">🧮 Calculator Consum Mediu</button>
-        <button class="btn-secondary" onclick="partajeazaVinWeb()">🔗 Copiaza / Partajeaza VIN</button>
+        <button class="btn-secondary" onclick="partajeazaVinWeb()">🔗 Partajează serie șasiu (VIN)</button>
         <button class="btn-primary" style="background:#C62828; margin-top:15px;" onclick="lockMeniuActiuni()">Inchide Meniu</button>
     </div>
 
@@ -473,12 +481,15 @@
             document.getElementById('vin-title').innerText = "VIN: " + vin;
             document.getElementById('etPin').value = "";
 
+            // Pune data curenta in calendarul nativ automat la incarcare
+            const azi = new Date().toISOString().split('T')[0];
+            document.getElementById('inputDataLucrare').value = azi;
+
             const layoutMecanic = document.getElementById('layoutMecanic');
             const ecranPin = document.getElementById('ecran-pin-blocat');
             const continutMasina = document.getElementById('continut-detalii-masina');
             const zonaProprietar = document.getElementById('zona-istoric-proprietar');
 
-            // Resetăm structura: readucem containerul nativ înapoi din modal în caz că a rămas acolo
             const istoricOriginal = document.getElementById('istoric-lucrari-container');
             if (istoricOriginal && zonaProprietar) {
                 zonaProprietar.appendChild(istoricOriginal);
@@ -488,12 +499,12 @@
                 layoutMecanic.style.display = 'none';
                 ecranPin.style.display = 'flex';
                 continutMasina.style.display = 'none';
-                if(zonaProprietar) zonaProprietar.style.display = 'block'; // Proprietarul vede zona nativă de istoric
+                if(zonaProprietar) zonaProprietar.style.display = 'block';
             } else {
                 layoutMecanic.style.display = 'block';
                 ecranPin.style.display = 'none';
                 continutMasina.style.display = 'block';
-                if(zonaProprietar) zonaProprietar.style.display = 'none'; // Mecanicul o are ascunsă nativ, mutată în modal
+                if(zonaProprietar) zonaProprietar.style.display = 'none';
                 incarcaIstoric();
                 window.initializeazaAutocompleteDescriere();
             }
@@ -536,7 +547,6 @@
         window.filtreazaLucrari = function(query) {
             const q = normalizeazaText(query);
             
-            // Corecție selectare container: Proprietarul folosește containerul nativ, Mecanicul pe cel din modal
             const estePopUpActiv = document.getElementById('modalIstoric') && document.getElementById('modalIstoric').style.display === 'block';
             const container = (estePopUpActiv && !esteProprietarMod) ? document.getElementById('istoric-lucrari-container-modal') : document.getElementById('istoric-lucrari-container');
             
@@ -589,6 +599,37 @@
             });
         };
 
+        // ALGORITM INTELIGENT DE AUTOCOMPLETARE PENTRU URMATOAREA REVIZIE
+        window.calculAutocompletareRevizie = function() {
+            const kmCurenti = parseInt(document.getElementById('inputKM').value);
+            const descriere = document.getElementById('inputDescriere').value.toLowerCase();
+            
+            const inputUrmatorKm = document.getElementById('inputUrmatorKm');
+            const inputUrmatoareaData = document.getElementById('inputUrmatoareaData');
+
+            if (!kmCurenti || isNaN(kmCurenti)) return;
+
+            // 1. Cazul pentru Revizii Standard (Ulei / Filtre) -> De regula +10.000 KM sau +1 An
+            if (descriere.includes("revizie") || descriere.includes("ulei") || descriere.includes("filtr")) {
+                inputUrmatorKm.value = kmCurenti + 10000;
+                
+                // Calcul data peste exact un an
+                const dataSelectata = new Date(document.getElementById('inputDataLucrare').value || new Date());
+                dataSelectata.setMonth(dataSelectata.getMonth() + 12);
+                const luni = ["ianuarie", "februarie", "martie", "aprilie", "mai", "iunie", "iulie", "august", "septembrie", "octombrie", "noiembrie", "decembrie"];
+                inputUrmatoareaData.value = `${luni[dataSelectata.getMonth()]} ${dataSelectata.getFullYear()}`;
+            } 
+            // 2. Cazul pentru Distributie -> De regula +60.000 KM sau +5 Ani
+            else if (descriere.includes("distributie") || descriere.includes("curea dist") || descriere.includes("lant")) {
+                inputUrmatorKm.value = kmCurenti + 60000;
+                
+                const dataSelectata = new Date(document.getElementById('inputDataLucrare').value || new Date());
+                const anulViitor = dataSelectata.getFullYear() + 5;
+                const luni = ["ianuarie", "februarie", "martie", "aprilie", "mai", "iunie", "iulie", "august", "septembrie", "octombrie", "noiembrie", "decembrie"];
+                inputUrmatoareaData.value = `${luni[dataSelectata.getMonth()]} ${anulViitor}`;
+            }
+        };
+
         window.initializeazaAutocompleteDescriere = function() {
             const inputDesc = document.getElementById('inputDescriere');
             const containerSugestii = document.getElementById('sugestii-descriere-container');
@@ -616,6 +657,7 @@
                     item.addEventListener('click', function() {
                         inputDesc.value = lucrare;
                         containerSugestii.style.display = 'none';
+                        window.calculAutocompletareRevizie(); // Declanșează calculul la click pe sugestie
                     });
                     containerSugestii.appendChild(item);
                 });
@@ -623,6 +665,8 @@
             }
 
             inputDesc.addEventListener('input', function() {
+                window.calculAutocompletareRevizie(); // Declanșează calculul când utilizatorul tastează liber
+                
                 const valoare = this.value.toLowerCase().trim();
                 containerSugestii.innerHTML = '';
 
@@ -655,6 +699,7 @@
                     item.addEventListener('click', function() {
                         inputDesc.value = lucrare;
                         containerSugestii.style.display = 'none';
+                        window.calculAutocompletareRevizie(); 
                     });
                     containerSugestii.appendChild(item);
                 });
@@ -672,6 +717,16 @@
             const urmatorKm = document.getElementById('inputUrmatorKm').value.trim();
             const urmatoareData = document.getElementById('inputUrmatoareaData').value.trim();
             const obs = document.getElementById('inputObservatii').value.trim();
+            
+            // Extragere data din calendarul nativ și formatare vizuală frumoasă (ex: 27 mai 2026)
+            const dataInputVal = document.getElementById('inputDataLucrare').value;
+            let dataAziFormatata = "";
+            if (dataInputVal) {
+                const partiData = new Date(dataInputVal);
+                dataAziFormatata = partiData.toLocaleDateString('ro-RO', { day: 'numeric', month: 'short', year: 'numeric' });
+            } else {
+                dataAziFormatata = new Date().toLocaleDateString('ro-RO', { day: 'numeric', month: 'short', year: 'numeric' });
+            }
 
             if (!km || !desc) { 
                 alert("Câmpurile Kilometraj curent și Tipul intervenției sunt obligatorii!"); 
@@ -683,7 +738,6 @@
             }
 
             const costTotalStr = (costP + costM).toFixed(1);
-            const dataAzi = new Date().toLocaleDateString('ro-RO', { day: 'numeric', month: 'short', year: 'numeric' });
 
             const nouaLucrare = {
                 km: parseInt(km),
@@ -693,7 +747,7 @@
                 urmatorKm: urmatorKm ? parseInt(urmatorKm) : "",
                 urmatoareaData: urmatoareData,
                 observatii: obs,
-                data: dataAzi
+                data: dataAziFormatata
             };
             
             push(ref(db, `Masini/${vinCurent}/lucrari`), nouaLucrare).then(() => {
@@ -707,6 +761,9 @@
                 document.getElementById('inputUrmatorKm').value = "";
                 document.getElementById('inputUrmatoareaData').value = "";
                 document.getElementById('inputObservatii').value = "";
+                
+                // Resetam data inapoi pe ziua curenta
+                document.getElementById('inputDataLucrare').value = new Date().toISOString().split('T')[0];
                 
                 incarcaIstoric();
             }).catch((error) => {
@@ -804,14 +861,32 @@
             }
         };
 
+        // REPARARE MODUL PARTAJARE NATIIVĂ VIN (SHARE SHEET TELEFON / CLIPBOARD PC)
         window.partajeazaVinWeb = function() {
             lockMeniuActiuni();
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(vinCurent).then(() => {
-                    alert("VIN-ul mașinii a fost copiat automat în clipboard!");
-                }).catch(() => alert("VIN-ul mașinii este: " + vinCurent));
+            if (!vinCurent) { alert("Niciun VIN încărcat!"); return; }
+
+            const textDeTrimis = `Serie șasiu / VIN detectat prin CarID: ${vinCurent}`;
+
+            if (navigator.share) {
+                // Dacă browserul suportă partajarea nativă (ex: Telefoane mobile)
+                navigator.share({
+                    title: 'Serie Șasiu CarID',
+                    text: textDeTrimis
+                }).then(() => {
+                    console.log('VIN Partajat cu succes!');
+                }).catch((error) => {
+                    console.log('Eroare sau partajare anulată:', error);
+                });
             } else {
-                alert("VIN-ul mașinii este: " + vinCurent);
+                // Soluție de rezervă pentru PC sau browsere vechi -> Copiere în clipboard
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(vinCurent).then(() => {
+                        alert(`Dispozitivul nu are funcție de share nativ.\n\nCopiat automat în clipboard:\n${vinCurent}`);
+                    }).catch(() => alert("VIN-ul mașinii este: " + vinCurent));
+                } else {
+                    alert("VIN-ul mașinii este: " + vinCurent);
+                }
             }
         };
 
