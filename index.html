@@ -151,48 +151,46 @@
             <div id="istoric-lucrari-container"></div>
 
             <div id="layoutMecanic" class="card" style="display:none; border-top:4px solid #37474F; margin-top:25px;">
-                <button id="btnToggleFormular" class="btn-secondary" style="background-color:#37474F; color:white; margin-bottom:10px;" onclick="toggleFormularLucrare()">➕ ADAUGĂ LUCRARE NOUĂ</button>
+                <h3 style="margin-top:0; color:#37474F;">🔧 Inregistrare Lucrare Noua</h3>
                 
-                <div id="campuriFormularLucrare" style="display:none; margin-top:15px;">
-                    <label>Kilometraj curent (KM) *</label>
-                    <input type="number" id="inputKM" placeholder="Ex: 184500">
-                    
-                    <div style="position: relative; text-align: left;">
-                        <label>Tipul interventiei / Lucrare executata *</label>
-                        <input type="text" id="inputDescriere" autocomplete="off" placeholder="Ex: Schimb filtre, discuri frana...">
-                        <div id="sugestii-descriere-container" style="position: absolute; top: 85%; left: 0; right: 0; background: white; border: 1px solid #CCC; border-radius: 0 0 6px 6px; max-height: 200px; overflow-y: auto; z-index: 9999; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.15);"></div>
-                    </div>
-
-                    <label>Piese folosite / Producatori</label>
-                    <input type="text" id="inputPiese" placeholder="Ex: Filtre MANN, Ulei Motul 5W30">
-
-                    <div style="display:flex; gap:10px;">
-                        <div style="flex:1;">
-                            <label>Cost Piese (RON)</label>
-                            <input type="number" id="inputCostPiese" placeholder="0">
-                        </div>
-                        <div style="flex:1;">
-                            <label>Cost Manopera (RON)</label>
-                            <input type="number" id="inputCostManopera" placeholder="0">
-                        </div>
-                    </div>
-
-                    <div style="display:flex; gap:10px;">
-                        <div style="flex:1;">
-                            <label>Urmatoarea revizie (KM)</label>
-                            <input type="number" id="inputUrmatorKm" placeholder="Ex: 194500">
-                        </div>
-                        <div style="flex:1;">
-                            <label>Urmatoarea revizie (Data)</label>
-                            <input type="text" id="inputUrmatoareaData" placeholder="Ex: mai 2027">
-                        </div>
-                    </div>
-
-                    <label>Observatii suplimentare / Recomandari</label>
-                    <textarea id="inputObservatii" rows="2" placeholder="Ex: Urmeaza schimbul..."></textarea>
-
-                    <button class="btn-primary" style="background:#388E3C;" onclick="salveazaLucrareNoua()">💾 Salveaza in Istoric</button>
+                <label>Kilometraj curent (KM) *</label>
+                <input type="number" id="inputKM" placeholder="Ex: 184500">
+                
+                <div style="position: relative; text-align: left;">
+                    <label>Tipul interventiei / Lucrare executata *</label>
+                    <input type="text" id="inputDescriere" autocomplete="off" placeholder="Ex: Schimb filtre, discuri frana...">
+                    <div id="sugestii-descriere-container" style="position: absolute; top: 85%; left: 0; right: 0; background: white; border: 1px solid #CCC; border-radius: 0 0 6px 6px; max-height: 200px; overflow-y: auto; z-index: 9999; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.15);"></div>
                 </div>
+
+                <label>Piese folosite / Producatori</label>
+                <input type="text" id="inputPiese" placeholder="Ex: Filtre MANN, Ulei Motul 5W30">
+
+                <div style="display:flex; gap:10px;">
+                    <div style="flex:1;">
+                        <label>Cost Piese (RON)</label>
+                        <input type="number" id="inputCostPiese" placeholder="0">
+                    </div>
+                    <div style="flex:1;">
+                        <label>Cost Manopera (RON)</label>
+                        <input type="number" id="inputCostManopera" placeholder="0">
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:10px;">
+                    <div style="flex:1;">
+                        <label>Urmatoarea revizie (KM)</label>
+                        <input type="number" id="inputUrmatorKm" placeholder="Ex: 194500">
+                    </div>
+                    <div style="flex:1;">
+                        <label>Urmatoarea revizie (Data)</label>
+                        <input type="text" id="inputUrmatoareaData" placeholder="Ex: mai 2027">
+                    </div>
+                </div>
+
+                <label>Observatii suplimentare / Recomandari</label>
+                <textarea id="inputObservatii" rows="2" placeholder="Ex: Urmeaza schimbul..."></textarea>
+
+                <button class="btn-primary" style="background:#388E3C;" onclick="salveazaLucrareNoua()">💾 Salveaza in Istoric</button>
             </div>
         </div>
     </div>
@@ -244,6 +242,9 @@
         let esteProprietarMod = false;
         let vinCurent = "";
         let listaLucrariCompleta = [];
+        let canvasFinalPentruSalvare = null;
+        let vinCurentQR = "";
+        let deferredPrompt = null; // Stocare prompt instalare telefon
 
         const SUGESTII_LUCRARI = [
             "Revizie completa (Ulei + 4 filtre)", "Schimb ulei motor", "Schimb filtru ulei", "Schimb filtru aer", "Schimb filtru habitaclu (polen)", "Schimb filtru combustibil", "Schimb lichid de frana", "Schimb antigel / Curatare instalatie", "Schimb ulei cutie de viteze manuala", "Schimb ulei cutie automata (Metoda prin cadere)", "Schimb ulei cutie automata (Aparat / Dinamic)", "Schimb ulei diferential", "Schimb ulei cutie de transfer (4x4)", "Resetare interval service / Ulei",
@@ -257,20 +258,6 @@
             "Diagnoza computerizata / Citire erori", "Stergere erori / Interpretare parametri in timp real", "Schimb baterie auto + Inregistrare (Codare)", "Schimb alternator", "Schimb electromotor (Demaror)", "Schimb senzori motor (Ax cu came / Arbore / ABS)", "Reparatie cablaj electric", "Reglaj faruri", "Schimb becuri / Kit Xenon / LED",
             "Schimb turbosuflanta (Turbina)", "Reconditionare turbosuflanta", "Schimb actuator turbina (Electric/Vacuumatic)", "Curatare galerie admisie / Clapete swirl", "Schimb radiator intercooler", "Schimb furtun intercooler (Presiune)"
         ];
-
-        // Functia care ascunde sau arata campurile formularului din interiorul cardului
-        window.toggleFormularLucrare = function() {
-            const containerFormular = document.getElementById('campuriFormularLucrare');
-            const btn = document.getElementById('btnToggleFormular');
-            
-            if (containerFormular.style.display === 'none') {
-                containerFormular.style.display = 'block';
-                btn.innerHTML = '➖ ASCUNDE FORMULARUL';
-            } else {
-                containerFormular.style.display = 'none';
-                btn.innerHTML = '➕ ADAUGĂ LUCRARE NOUĂ';
-            }
-        };
 
         window.navigateTo = function(pageId) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -335,7 +322,7 @@
         function salveazaInGarajLocal(vin) {
             try {
                 let garaj = JSON.parse(localStorage.getItem('garaj_carid')) || [];
-                if (!garaj.includes(vin)) {
+                if (!proprietar.includes(vin)) {
                     garaj.push(vin);
                     localStorage.setItem('garaj_carid', JSON.stringify(garaj));
                 }
@@ -386,10 +373,6 @@
             document.getElementById('vin-title').innerText = "VIN: " + vin;
             document.getElementById('etPin').value = "";
             
-            // Resetam starea vizuala a formularului la deschiderea unei masini noi
-            document.getElementById('campuriFormularLucrare').style.display = 'none';
-            document.getElementById('btnToggleFormular').innerHTML = '➕ ADAUGĂ LUCRARE NOUĂ';
-
             const layoutMecanic = document.getElementById('layoutMecanic');
             const ecranPin = document.getElementById('ecran-pin-blocat');
             const continutMasina = document.getElementById('continut-detalii-masina');
@@ -403,7 +386,6 @@
                 ecranPin.style.display = 'none';
                 continutMasina.style.display = 'block';
                 incarcaIstoric();
-                initializeazaAutocompleteDescriere();
             }
             navigateTo('details-page');
         }
@@ -459,7 +441,7 @@
             });
         };
 
-        function initializeazaAutocompleteDescriere() {
+        window.initializeazaAutocompleteDescriere = function() {
             const inputDesc = document.getElementById('inputDescriere');
             const containerSugestii = document.getElementById('sugestii-descriere-container');
             if (!inputDesc || !containerSugestii) return;
@@ -485,7 +467,7 @@
                 });
                 containerSugestii.style.display = 'block';
             });
-        }
+        };
 
         window.salveazaLucrareNoua = function() {
             const km = document.getElementById('inputKM').value.trim();
@@ -509,9 +491,6 @@
                 document.getElementById('inputKM').value = ""; document.getElementById('inputDescriere').value = ""; document.getElementById('inputPiese').value = "";
                 document.getElementById('inputCostPiese').value = ""; document.getElementById('inputCostManopera').value = ""; document.getElementById('inputUrmatorKm').value = "";
                 document.getElementById('inputUrmatoareaData').value = ""; document.getElementById('inputObservatii').value = "";
-                
-                // Ascundem la loc formularul dupa salvare
-                toggleFormularLucrare();
                 incarcaIstoric();
             }).catch((error) => {
                 alert("Eroare la salvare: " + error.message);
@@ -533,92 +512,140 @@
             }
         }
 
+        // MENIURI EXTRA MODALE
         window.deschideMeniuActiuni = function() {
             document.getElementById('actionSheetMenu').style.display = 'block';
             document.getElementById('actionMenuOverlay').style.display = 'block';
-            const optiuniProprietar = document.getElementById('optiuni-proprietar-web');
-            if (optiuniProprietar) {
-                optiuniProprietar.style.display = esteProprietarMod ? 'block' : 'none';
-            }
+            document.getElementById('optiuni-proprietar-web').style.display = esteProprietarMod ? 'block' : 'none';
         };
-
         window.lockMeniuActiuni = function() {
             document.getElementById('actionSheetMenu').style.display = 'none';
             document.getElementById('actionMenuOverlay').style.display = 'none';
         };
+        window.inchideMeniuActiuni = window.lockMeniuActiuni;
 
-        window.afiseazaStatusDocument = function(tipDoc) {
-            lockMeniuActiuni();
-            get(ref(db, `Masini/${vinCurent}/documente/${tipDoc}`)).then((snapshot) => {
-                let valoareCurenta = snapshot.exists() ? snapshot.val() : "Nespecificat";
-                let nouaData = prompt(`Data curenta pentru ${tipDoc.toUpperCase()} este: ${valoareCurenta}\n\nIntrodu noua data (sau apasa Cancel):`, valoareCurenta);
-                if (nouaData !== null && nouaData.trim() !== "") {
-                    set(ref(db, `Masini/${vinCurent}/documente/${tipDoc}`), nouaData.trim()).then(() => alert("Data actualizata cu succes!"));
-                }
+        window.afiseazaStatusDocument = function(tip) {
+            inchideMeniuActiuni();
+            const docRef = ref(db, `Masini/${vinCurent}/documente/${tip}`);
+            get(docRef).then((snap) => {
+                const dataC = snap.exists() ? snap.val() : "Nesetata";
+                let nouaD = prompt(`Expira la: ${dataC}\nNoua data (DD.MM.YYYY):`, dataC);
+                if (nouaD) set(docRef, nouaD.trim()).then(() => alert("Data salvata!"));
             });
         };
 
         window.afiseazaSpecificatiiWeb = function() {
-            lockMeniuActiuni();
-            get(ref(db, `Masini/${vinCurent}/specificatii`)).then((snapshot) => {
-                let dateSpec = snapshot.exists() ? snapshot.val() : { ulei: "Nespecificat", anvelope: "Nespecificat" };
-                let msg = `⚙️ Specificatii tehnice curente:\n\n🛢️ Spec ulei: ${dateSpec.ulei || 'Nespecificat'}\n🚗 Dimensiuni anvelope: ${dateSpec.anvelope || 'Nespecificat'}`;
-                
-                if(!esteProprietarMod) {
-                    let vreaModificare = confirm(`${msg}\n\nDoresti sa modifici aceste specificatii?`);
-                    if(vreaModificare) {
-                        let nouUlei = prompt("Introdu tipul de ulei recomandat:", dateSpec.ulei || "");
-                        let noiAnvelope = prompt("Introdu dimensiunile anvelopelor:", dateSpec.anvelope || "");
-                        if (nouUlei !== null && noiAnvelope !== null) {
-                            set(ref(db, `Masini/${vinCurent}/specificatii`), { ulei: nouUlei, anvelope: noiAnvelope }).then(() => alert("Specificatii salvate!"));
-                        }
-                    }
-                } else {
-                    alert(msg);
-                }
+            inchideMeniuActiuni();
+            const specsRef = ref(db, `Masini/${vinCurent}/specs`);
+            get(specsRef).then((snap) => {
+                let u = snap.child("ulei").val() || "", a = snap.child("anvelope").val() || "";
+                let nouU = prompt("Tip Ulei Recomandat:", u), nouA = prompt("Dimensiuni Anvelope:", a);
+                if (nouU !== null || nouA !== null) set(specsRef, { ulei: nouU || u, anvelope: nouA || a }).then(() => alert("Specificatii salvate!"));
             });
         };
 
         window.deschideCalculatorConsum = function() {
-            lockMeniuActiuni();
-            let kmParcursi = prompt("Introdu numarul de kilometri parcursi de la plin la plin:");
-            let litriAlimentati = prompt("Introdu numarul de litri alimentati:");
-            if(kmParcursi && litriAlimentati) {
-                let consumMediu = (parseFloat(litriAlimentati) / parseFloat(kmParcursi)) * 100;
-                alert(`🧮 Consumul mediu calculat este: ${consumMediu.toFixed(2)} L / 100 KM`);
-            }
+            inchideMeniuActiuni();
+            let litri = parseFloat(prompt("Cati litri ai alimentat?")), km = parseFloat(prompt("Cati kilometri ai parcurs?"));
+            if (litri && km) alert(`Consum mediu calculat: ${((litri / km) * 100).toFixed(2)} L/100km`);
         };
 
         window.partajeazaVinWeb = function() {
-            lockMeniuActiuni();
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(vinCurent).then(() => alert("VIN copiat in clipboard!"));
-            } else {
-                alert("VIN-ul masinii este: " + vinCurent);
-            }
+            inchideMeniuActiuni();
+            if (navigator.share) navigator.share({ title: 'CarID', text: `VIN: ${vinCurent}` });
+            else prompt("Copiaza codul VIN de mai jos:", vinCurent);
         };
 
         window.genereazaCodQRWeb = function() {
-            const vinInput = document.getElementById('inputVIN_Client').value.trim().toUpperCase();
-            const pin1 = document.getElementById('inputPIN_Securitate').value.trim();
-            const pin2 = document.getElementById('inputPIN_Confirmare').value.trim();
+            const vin = document.getElementById('inputVIN_Client').value.trim().toUpperCase();
+            const pin = document.getElementById('inputPIN_Securitate').value.trim();
+            const conf = document.getElementById('inputPIN_Confirmare').value.trim();
 
-            if(vinInput.length !== 17 || pin1.length !== 4 || pin1 !== pin2) {
-                alert("Asigura-te ca VIN are 17 caractere si PIN-urile coincid (4 cifre)!");
-                return;
-            }
+            if (vin.length !== 17 || pin.length !== 4 || pin !== conf) { alert("Verifica datele! VIN-ul trebuie sa aiba 17 caractere, iar PIN-urile trebuie sa fie identice."); return; }
 
-            set(ref(db, `Masini/${vinInput}/pin`), pin1).then(() => {
-                document.getElementById('imgQRCode').innerHTML = "";
-                new QRCode(document.getElementById('imgQRCode'), {
-                    text: `https://carid-eae71.web.app/?vin=${vinInput}`,
-                    width: 256,
-                    height: 256
-                });
-                document.getElementById('qrContainer').style.display = 'flex';
-                alert("Masina inregistrata cu succes pe server!");
+            vinCurentQR = vin;
+            set(ref(db, `Masini/${vin}/pin`), pin).then(() => {
+                const adresaBazaSite = window.location.href.split('?')[0];
+                const linkCompletInterfata = `${adresaBazaSite}?vin=${vin}`;
+
+                const tempDiv = document.createElement("div");
+                new QRCode(tempDiv, { text: linkCompletInterfata, width: 440, height: 440, correctLevel: QRCode.CorrectLevel.H });
+
+                setTimeout(() => {
+                    const qrCanvas = tempDiv.querySelector('canvas');
+                    if (!qrCanvas) return;
+
+                    const canvasFinal = document.createElement('canvas');
+                    canvasFinal.width = 540; canvasFinal.height = 630;
+                    const ctx = canvasFinal.getContext('2d');
+
+                    ctx.fillStyle = "#FFFFFF"; ctx.fillRect(0, 0, 540, 630);
+                    ctx.drawImage(qrCanvas, 50, 50);
+
+                    ctx.fillStyle = "#000000"; ctx.font = "bold 38px Arial"; ctx.textAlign = "center";
+                    ctx.fillText("CarID - Istoric Digital", 270, 575);
+
+                    const img = document.getElementById('imgQRCode'); img.innerHTML = "";
+                    const webImg = document.createElement("img");
+                    webImg.src = canvasFinal.toDataURL("image/png"); webImg.style.width = "100%";
+                    img.appendChild(webImg);
+
+                    canvasFinalPentruSalvare = canvasFinal;
+                    document.getElementById('qrContainer').style.display = 'flex';
+                    alert("Codul QR digital a fost generat securizat!");
+                }, 150);
             });
         };
+
+        window.salveazaInGalerieWeb = function() {
+            if (!canvasFinalPentruSalvare) return;
+            const link = document.createElement('a');
+            link.download = `CarID_${Date.now()}.png`; link.href = canvasFinalPentruSalvare.toDataURL("image/png"); link.click();
+        };
+
+        window.partajeazaQRWeb = function() {
+            if (!canvasFinalPentruSalvare) return;
+            canvasFinalPentruSalvare.toBlob((blob) => {
+                const f = new File([blob], "share_qr.png", { type: "image/png" });
+                if (navigator.canShare && navigator.canShare({ files: [f] })) navigator.share({ files: [f], title: "CarID QR" });
+            });
+        };
+
+        function verificaDacaVineDinScanareDirecta() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const vinDetectatDinLink = urlParams.get('vin');
+
+            if (vinDetectatDinLink && vinDetectatDinLink.length === 17) {
+                const vinCurat = vinDetectatDinLink.toUpperCase();
+                salveazaInGarajLocal(vinCurat);
+                esteProprietarMod = true;
+                deschideDetalii(vinCurat);
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }
+
+        // --- INTEGRARE COMPONENTA DE INSTALARE PE TELEFON (PWA) ---
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e; // Salvam evenimentul ca sa-l pornim din butonul nostru
+            
+            const btnInstaleaza = document.getElementById('btnInstaleazaApp');
+            if (btnInstaleaza) {
+                btnInstaleaza.style.display = 'block'; // Aratam butonul portocaliu
+                
+                btnInstaleaza.addEventListener('click', () => {
+                    btnInstaleaza.style.display = 'none';
+                    deferredPrompt.prompt(); // Declanșăm instalarea nativă a telefonului
+                    deferredPrompt.userChoice.then(() => {
+                        deferredPrompt = null;
+                    });
+                });
+            }
+        });
+
+        // Pornire automata configurari la incarcare
+        verificaDacaVineDinScanareDirecta();
+        window.initializeazaAutocompleteDescriere();
     </script>
 </body>
 </html>
