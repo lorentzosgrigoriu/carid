@@ -61,7 +61,7 @@
             padding: 20px; box-sizing: border-box;
         }
         #drawerMenu.open { left: 0; }
-        #drawerOverlay, #actionMenuOverlay, #modalIstoricOverlay {
+        #drawerOverlay, #actionMenuOverlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.5); display: none; z-index: 999;
@@ -75,14 +75,19 @@
             box-shadow: 0 -4px 10px rgba(0,0,0,0.15); max-width: 600px; margin: 0 auto;
         }
 
-        /* Stil pentru Pop-up Istoric (Modal) */
+        /* STILURI POP-UP ISTORIC (Adăugate strict pentru modal) */
+        #modalIstoricOverlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); display: none; z-index: 2000;
+        }
         #modalIstoric {
             position: fixed;
             top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 90%; max-width: 550px; max-height: 85vh;
-            background: white; border-radius: 12px; padding: 20px;
-            box-sizing: border-box; overflow-y: auto; display: none; z-index: 1000;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            background: white; border-radius: 8px; padding: 20px;
+            box-sizing: border-box; overflow-y: auto; display: none; z-index: 2001;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
     </style>
 </head>
@@ -219,11 +224,10 @@
     <div id="modalIstoric">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #EEE; padding-bottom:10px; margin-bottom:15px;">
             <h3 style="margin:0; color:#1565C0;">📋 Istoric Lucrări Salvate</h3>
-            <button onclick="inchideModalIstoric()" style="width:auto; margin:0; padding:5px 10px; background:#C62828; color:white; font-size:14px;">X</button>
+            <button onclick="inchideModalIstoric()" style="width:auto; margin:0; padding:5px 10px; background:#C62828; color:white; font-size:14px; font-weight:bold;">X</button>
         </div>
         
         <input type="text" id="cautareIstoricModal" placeholder="🔍 Cauta in istoric (ex: ulei, placute)..." oninput="window.filtreazaLucrari(this.value)">
-        
         <div id="istoric-lucrari-container-modal"></div>
         
         <button class="btn-secondary" style="margin-top:15px;" onclick="inchideModalIstoric()">Închide</button>
@@ -288,6 +292,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, set, get, push, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
+        // Configurare conexiune la baza de date Google Firebase RTDB
         const firebaseConfig = {
             apiKey: "AIzaSyAD1-X7o_jzV5OjjA3p341VMP-wWsnjjmg",
             authDomain: "carid-eae71.firebaseapp.com",
@@ -298,6 +303,7 @@
             appId: "1:571042772219:web:925420319b3e8b898bac5e"
         };
 
+        // Initializare obiecte globale aplicatie
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
@@ -316,6 +322,7 @@
                 .replace(/[^a-z0-9\s]/g, ""); // păstrează doar literele și cifrele
         }
 
+        // Vector static global continand sugestiile standard pentru auto-completarea fiselor de service
         const SUGESTII_LUCRARI = [
             "Revizie completa (Ulei + 4 filtre)", "Schimb ulei motor", "Schimb filtru ulei", "Schimb filtru aer", "Schimb filtru habitaclu (polen)", "Schimb filtru combustibil", "Schimb lichid de frana", "Schimb antigel / Curatare instalatie", "Schimb ulei cutie de viteze manuala", "Schimb ulei cutie automata (Metoda prin cadere)", "Schimb ulei cutie automata (Aparat / Dinamic)", "Schimb ulei diferential", "Schimb ulei cutie de transfer (4x4)", "Resetare interval service / Ulei",
             "Schimb placute frana fata", "Schimb placute frana spate", "Schimb discuri si placute frana fata", "Schimb discuri si placute frana spate", "Schimb lichid frana + Aerisire sistem", "Schimb etrier frana", "Reconditionare etrier (Garnituri + Piston)", "Schimb cablu frana de mana", "Reglaj frana de mana", "Schimb senzori uzura placute", "Schimb furtunuri frana (flexibile)", "Schimb pompa centrala de frana",
@@ -331,6 +338,7 @@
 
         let deferredPrompt = null;
 
+        // Navigatie instanta intre ecranele PWA-ului prin managementul clasei active
         window.navigateTo = function(pageId) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById(pageId).classList.add('active');
@@ -355,6 +363,7 @@
             }
         };
 
+        // Activare modul scanare camera foto nativa si initializare librarie Html5Qrcode
         window.setRol = function(rol) {
             esteProprietarMod = (rol === 'proprietar');
             document.getElementById('scanner-container').style.display = 'block';
@@ -379,6 +388,7 @@
             }
         };
 
+        // Extragere filtru si parsare text din QR Code (Link web vs text VIN simplu)
         window.proceseazaCodScanat = function(textScanat) {
             let vinCurat = textScanat.trim();
             
@@ -410,7 +420,7 @@
         function salveazaInGarajLocal(vin) {
             try {
                 let garaj = JSON.parse(localStorage.getItem('garaj_carid')) || [];
-                if (!garaj.includes(vin)) {
+                if (!gaj.includes(vin)) {
                     garaj.push(vin);
                     localStorage.setItem('garaj_carid', JSON.stringify(garaj));
                 }
@@ -473,18 +483,19 @@
             const layoutMecanic = document.getElementById('layoutMecanic');
             const ecranPin = document.getElementById('ecran-pin-blocat');
             const continutMasina = document.getElementById('continut-detalii-masina');
-            const inputCautareBaza = document.getElementById('cautareIstoric');
+            const zonaProprietar = document.getElementById('zona-istoric-proprietar');
 
             if (esteProprietarMod) {
                 layoutMecanic.style.display = 'none';
                 ecranPin.style.display = 'flex';
                 continutMasina.style.display = 'none';
-                if(inputCautareBaza) inputCautareBaza.style.display = 'block';
+                if(zonaProprietar) zonaProprietar.style.display = 'block';
             } else {
                 layoutMecanic.style.display = 'block';
                 ecranPin.style.display = 'none';
                 continutMasina.style.display = 'block';
-                if(inputCautareBaza) inputCautareBaza.style.display = 'none';
+                // Pentru mecanic, ascundem zona nativă ca să fie accesibilă doar prin pop-up-ul dedicat
+                if(zonaProprietar) zonaProprietar.style.display = 'none';
                 incarcaIstoric();
                 window.initializeazaAutocompleteDescriere();
             }
@@ -524,12 +535,13 @@
             }).catch(err => console.error("Eroare incarcare istoric", err));
         }
 
+        // Randare dinamica istoric pe baza query-ului (Suportă atât bara normală cât și bara din modal)
         window.filtreazaLucrari = function(query) {
             const q = normalizeazaText(query);
             
-            // Verificăm unde randăm lista de lucrări în funcție de modul vizualizat (modal sau pagină de bază)
-            const esteModalVizibil = document.getElementById('modalIstoric') && document.getElementById('modalIstoric').style.display === 'block';
-            const container = esteModalVizibil ? document.getElementById('istoric-lucrari-container-modal') : document.getElementById('istoric-lucrari-container');
+            // Detectăm automat dacă modalul este activ ca să știm unde trimitem datele preluate din Firebase
+            const estePopUpActiv = document.getElementById('modalIstoric') && document.getElementById('modalIstoric').style.display === 'block';
+            const container = estePopUpActiv ? document.getElementById('istoric-lucrari-container-modal') : document.getElementById('istoric-lucrari-container');
             
             if (!container) return;
             container.innerHTML = "";
@@ -580,6 +592,7 @@
             });
         };
 
+        // Algoritm filtrare predictiva in timp real pentru caseta tip interventie
         window.initializeazaAutocompleteDescriere = function() {
             const inputDesc = document.getElementById('inputDescriere');
             const containerSugestii = document.getElementById('sugestii-descriere-container');
