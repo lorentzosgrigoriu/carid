@@ -253,11 +253,24 @@
     <div id="actionSheetMenu">
         <h3 style="margin-top:0; border-bottom:1px solid #EEE; padding-bottom:10px; color:#1565C0;">📋 Actiuni Rapide</h3>
         
-        <div id="optiuni-proprietar-web">
-            <button class="btn-secondary" onclick="afiseazaStatusDocument('itp')">📅 Verifica / Schimba data ITP</button>
-            <button class="btn-secondary" onclick="afiseazaStatusDocument('rca')">🛡️ Verifica / Schimba data RCA</button>
-            <button class="btn-secondary" onclick="afiseazaStatusDocument('rovinieta')">🛣️ Verifica / Schimba Rovinieta</button>
-        </div>
+       <div id="optiuni-proprietar-web">
+    <div style="margin: 10px 0;">
+        <label style="font-size: 13px; color: #555; font-weight: bold;">📅 Data ITP:</label>
+        <input type="date" id="dataITP" onchange="actualizeazaData('itp')" style="margin-bottom: 5px;">
+    </div>
+    <div style="margin: 10px 0;">
+        <label style="font-size: 13px; color: #555; font-weight: bold;">🛡️ Data RCA:</label>
+        <input type="date" id="dataRCA" onchange="actualizeazaData('rca')" style="margin-bottom: 5px;">
+    </div>
+    <div style="margin: 10px 0;">
+        <label style="font-size: 13px; color: #555; font-weight: bold;">🛣️ Data Rovinietă:</label>
+        <input type="date" id="dataRovinieta" onchange="actualizeazaData('rovinieta')" style="margin-bottom: 5px;">
+    </div>
+    <div style="margin: 10px 0;">
+        <label style="font-size: 13px; color: #555; font-weight: bold;">💼 Data CASCO:</label>
+        <input type="date" id="dataCasco" onchange="actualizeazaData('casco')" style="margin-bottom: 5px;">
+    </div>
+</div>
 
         <button class="btn-secondary" onclick="afiseazaSpecificatiiWeb()">🛢️ Specificatii Ulei & Anvelope</button>
         <button class="btn-secondary" onclick="deschideCalculatorConsum()">🧮 Calculator Consum Mediu</button>
