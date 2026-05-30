@@ -132,11 +132,22 @@
         </div>
 
         <div id="qrContainer" class="card" style="display:none; flex-direction:column; align-items:center; text-align:center;">
-            <h4>Codul tau a fost securizat si generat!</h4>
-            <div id="imgQRCode" style="background:#FFF; padding:10px; border-radius:6px; max-width:280px; width:100%;"></div>
-            <button class="btn-primary" style="background:#2E7D32; margin-top:15px;" onclick="salveazaInGalerieWeb()">📥 Descarca Imaginea (PNG)</button>
-            <button class="btn-secondary" onclick="partajeazaQRWeb()">📤 Trimite / Share QR</button>
-        </div>
+    <h4>Codul tau a fost securizat si generat!</h4>
+    <div id="imgQRCode" style="background:#FFF; padding:10px; border-radius:6px; max-width:280px; width:100%;"></div>
+
+    <button class="btn-primary" style="background:#FF6D00; margin-top:15px;" 
+            onclick="window.salveazaInGarajCloud(document.getElementById('inputVIN_Client').value)">
+        💾 Salvează în Garajul meu
+    </button>
+    
+    <button class="btn-primary" style="background:#2E7D32; margin-top:10px;" onclick="salveazaInGalerieWeb()">
+        📥 Descarca Imaginea (PNG)
+    </button>
+    
+    <button class="btn-secondary" style="margin-top:10px;" onclick="partajeazaQRWeb()">
+        📤 Trimite / Share QR
+    </button>
+</div>
     </div>
 
     <div id="garaj-page" class="page">
