@@ -1,13 +1,13 @@
-const CACHE_NAME = 'carid-v1';
+const CACHE_NAME = 'carid-v2'; // Schimbat la v2 pentru a forța actualizarea
 const ASSETS = [
   './',
   './index.html',
   './app.js',
   './manifest.json',
-  './logo.png' // asigură-te că numele coincide cu cel din folder
+  './logo.png'
 ];
 
-// Instalare Service Worker și salvare fișiere în Cache (pentru viteză și offline)
+// Instalare Service Worker și salvare inițială în Cache
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
@@ -16,7 +16,7 @@ self.addEventListener('install', e => {
   );
 });
 
-// Activare și curățare cache-uri vechi
+// Activare și curățare cache-uri vechi (șterge automat carid-v1)
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys => {
@@ -31,18 +31,33 @@ self.addEventListener('activate', e => {
   );
 });
 
-// Rețeaua (baza de date Firebase) are prioritate. Dacă nu e net, încarcă resursele din cache.
+// Strategia Network-First: prioritizează internetul, folosește cache-ul doar offline
 self.addEventListener('fetch', e => {
-  // Ignoră cererile către Firebase sau baze de date externe pentru a nu bloca datele live
-  if (e.request.url.includes('firebase') || e.request.url.includes('firestore')) {
+  // Ignoră cererile către serverele live Firebase (Auth, Firestore, Realtime Database)
+  if (
+    e.request.url.includes('firebase') || 
+    e.request.url.includes('firestore') || 
+    e.request.url.includes('firebasedatabase') ||
+    e.request.url.includes('gstatic.com')
+  ) {
     return;
   }
   
   e.respondWith(
-    caches.match(e.request).then(cachedResponse => {
-      return cachedResponse || fetch(e.request).catch(() => {
-        // Opțional: poți întoarce o pagină de offline aici dacă vrei
-      });
-    })
+    fetch(e.request)
+      .then(networkResponse => {
+        // Dacă cererea de pe net a reușit, salvăm copia proaspătă în cache pentru când nu va fi semnal
+        if (networkResponse && networkResponse.status === 200 && e.request.method === 'GET') {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(e.request, responseToCache);
+          });
+        }
+        return networkResponse;
+      })
+      .catch(() => {
+        // Dacă netul pică (ești în garaj/sub mașină), încarcă instant din cache ce s-a salvat anterior
+        return caches.match(e.request);
+      })
   );
 });
