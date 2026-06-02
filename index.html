@@ -99,6 +99,8 @@
         <h2 style="text-align:center; color:#1565C0; margin-top:0; margin-bottom:5px;">CarID</h2>
         <p style="text-align:center; margin-top:0; color:#666;">Alegeți rolul pentru a începe:</p>
         
+        <button class="btn-secondary" style="background-color:#0288D1; color:white;" onclick="navigateTo('ghid-page')">📖 CUM SE UTILIZEAZĂ APLICAȚIA?</button>
+        
         <button class="btn-primary" onclick="setRol('proprietar')">🚗 SUNT PROPRIETAR (Scanează / Încarcă)</button>
         <button class="btn-secondary" style="background-color:#37474F; color:white;" onclick="setRol('mecanic')">🔧 SUNT MECANIC (Adaugă Lucrări)</button>
         
@@ -252,6 +254,41 @@
         <button class="btn-secondary" style="margin-top:15px;" onclick="inchideModalIstoric()">Închide</button>
     </div>
 
+    <div id="ghid-page" class="page">
+    <div style="display:flex; align-items:center; margin-bottom:15px;">
+        <button onclick="navigateTo('home-page')" style="width:auto; margin:0; padding:8px 15px;">⬅️ Înapoi</button>
+        <h3 style="margin-left:15px; margin-top:0; margin-bottom:0;">📖 Ghid de Utilizare</h3>
+    </div>
+
+    <div class="card" style="border-left: 4px solid #1565C0;">
+        <h4 style="margin-top:0; color:#1565C0;">🚗 Pentru Proprietari</h4>
+        <p>Aplicația funcționează pe bază de coduri QR unice generate special pentru mașina ta.</p>
+        <ol style="padding-left:20px; line-height: 1.5;">
+            <li><strong>Înregistrare:</strong> Mergi la „Înregistrare Mașină Nouă”, introdu seria de șasiu (VIN) și setează un PIN din 4 cifre.</li>
+            <li><strong>Salvare QR:</strong> Descarcă imaginea QR generată sau printeaz-o (o poți lipi pe parbriz, pe stâlpul ușii sau în cartea mașinii).</li>
+            <li><strong>Vizualizare Istoric:</strong> Scanează codul QR în modul Proprietar, introdu PIN-ul și ai acces instant la revizii, ITP, RCA și specificații tehnice.</li>
+        </ol>
+    </div>
+
+    <div class="card" style="border-left: 4px solid #37474F;">
+        <h4 style="margin-top:0; color:#37474F;">🔧 Pentru Mecanici / Ateliere</h4>
+        <p>Nu aveți nevoie de cont sau PIN pentru a introduce date, asigurând un proces rapid în atelier.</p>
+        <ol style="padding-left:20px; line-height: 1.5;">
+            <li>Selectează <strong>„Sunt Mecanic”</strong> de pe ecranul principal și scanează codul QR al mașinii clientului.</li>
+            <li>Completează kilometrajul, piesele folosite și costurile intervenției.</li>
+            <li>Apasă <strong>„Salvează în Istoric”</strong>. Datele se trimit direct în cloud pe baza seriei de șasiu, fără a putea fi șterse sau modificate ulterior de terți.</li>
+        </ol>
+    </div>
+
+    <div class="card" style="background:#E8F5E9; border-left: 4px solid #2E7D32;">
+        <h4 style="margin-top:0; color:#2E7D32;">💡 Sfaturi Utile</h4>
+        <ul style="padding-left:20px; line-height: 1.5;">
+            <li>Folosește funcția <strong>„Salvează în Garajul Meu”</strong> pentru a accesa istoricul mașinii tale printr-un singur click, fără să mai scanezi QR-ul de fiecare dată.</li>
+            <li>În meniul de acțiuni poți introduce alertele pentru expirarea documentelor obligatorii (ITP, RCA, Rovinietă).</li>
+        </ul>
+    </div>
+</div>
+    
     <div id="drawerOverlay" onclick="toggleDrawer(false)"></div>
     <div id="drawerMenu">
         <img src="logo.png" alt="CarID Logo" style="display:block; margin: 0 auto 10px auto; max-width: 80px; height: auto;" onerror="this.style.display='none';">
