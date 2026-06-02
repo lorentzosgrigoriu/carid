@@ -479,17 +479,117 @@
             }
         };
 
-        function salveazaInGarajLocal(vin) {
-            try {
-                let garaj = JSON.parse(localStorage.getItem('garaj_carid')) || [];
-                if (!garaj.includes(vin)) {
-                    garaj.push(vin);
-                    localStorage.setItem('garaj_carid', JSON.stringify(garaj));
-                }
-            } catch (e) {
-                console.error("Eroare salvare localstorage garaj", e);
+        // ========================================================
+        // SISTEM INTEGRAT DE GARAJ INSTANT (CLOUD + CROSS-BROWSER)
+        // ========================================================
+        function obtineDeviceID() {
+            let id = localStorage.getItem('carid_device_token');
+            if (!id) {
+                id = 'dev_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+                localStorage.setItem('carid_device_token', id);
+            }
+            return id;
+        }
+
+        function verificaSincronizareGaraj() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const gidParam = urlParams.get('gid');
+            if (gidParam) {
+                localStorage.setItem('carid_device_token', gidParam);
             }
         }
+        verificaSincronizareGaraj();
+
+        window.salveazaInGarajCloud = function(vin) {
+            if (!vin || vin.length !== 17) {
+                alert("Introduceți un VIN valid de 17 caractere înainte de salvare!");
+                return;
+            }
+            
+            const vinCurat = vin.toUpperCase();
+            const deviceId = obtineDeviceID();
+
+            try {
+                let garajLocal = JSON.parse(localStorage.getItem('garaj_carid')) || [];
+                if (!garajLocal.includes(vinCurat)) {
+                    garajLocal.push(vinCurat);
+                    localStorage.setItem('garaj_carid', JSON.stringify(garajLocal));
+                }
+            } catch(e) { console.error(e); }
+
+            set(ref(db, `Garaje/${deviceId}/${vinCurat}`), true)
+                .then(() => {
+                    alert(`🚗 Mașina ${vinCurat} a fost salvată în Garajul tău!`);
+                    if (document.getElementById('garaj-page').classList.contains('active')) {
+                        incarcaGarajLocal();
+                    }
+                })
+                .catch(err => alert("Eroare la salvarea în cloud: " + err.message));
+        };
+
+        function incarcaGarajLocal() {
+            const containerGaraj = document.getElementById('lista-garaj');
+            if (!containerGaraj) return; 
+            containerGaraj.innerHTML = "<p style='text-align:center; color:#666;'>Se încarcă garajul...</p>";
+            
+            const deviceId = obtineDeviceID();
+            
+            get(ref(db, `Garaje/${deviceId}`)).then((snapshot) => {
+                containerGaraj.innerHTML = "";
+                let masini = [];
+
+                if (snapshot.exists()) {
+                    masini = Object.keys(snapshot.val());
+                } else {
+                    masini = JSON.parse(localStorage.getItem('garaj_carid')) || [];
+                }
+
+                if (masini.length === 0) {
+                    containerGaraj.innerHTML = `
+                        <p style="color: #757575; font-style: italic; text-align: center; margin-top: 15px;">
+                            Nicio mașină salvată în garaj. Scanează un cod QR în modul proprietar pentru a adăuga prima mașină.
+                        </p>
+                    `;
+                    return;
+                }
+
+                masini.forEach(vin => {
+                    const cardMasina = document.createElement('div');
+                    cardMasina.style.cssText = "background: #1565C0; color: white; padding: 15px; margin: 10px 0; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2); font-weight: bold; cursor: pointer;";
+                    
+                    cardMasina.onclick = function(e) {
+                        if(e.target.tagName === 'BUTTON') return;
+                        esteProprietarMod = true;
+                        deschideDetalii(vin);
+                    };
+
+                    cardMasina.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span>🚘</span>
+                            <span style="font-size: 15px; letter-spacing: 1px; font-family: monospace;">${vin}</span>
+                        </div>
+                        <button onclick="stergeDinGarajCloud('${vin}')" style="background: transparent; border: none; color: white; font-size: 1.2rem; cursor: pointer; padding: 5px;">🗑️</button>
+                    `;
+                    containerGaraj.appendChild(cardMasina);
+                });
+            }).catch(err => {
+                containerGaraj.innerHTML = "<p style='color:red; text-align:center;'>Eroare la încărcarea datelor.</p>";
+            });
+        }
+
+        window.stergeDinGarajCloud = function(vin) {
+            if (confirm(`Sigur vrei să ștergi mașina cu VIN-ul ${vin} din Garajul tău?`)) {
+                const deviceId = obtineDeviceID();
+                remove(ref(db, `Garaje/${deviceId}/${vin}`)).then(() => {
+                    let garajLocal = JSON.parse(localStorage.getItem('garaj_carid')) || [];
+                    garajLocal = garajLocal.filter(item => item !== vin);
+                    localStorage.setItem('garaj_carid', JSON.stringify(garajLocal));
+                    incarcaGarajLocal();
+                }).catch(err => alert("Eroare la ștergere: " + err.message));
+            }
+        };
+        // ========================================================
+          
 
         function incarcaGarajLocal() {
             const containerGaraj = document.getElementById('lista-garaj');
@@ -967,28 +1067,41 @@
             }
         };
 
-        window.genereazaCodQRWeb = function() {
-            const vinInput = document.getElementById('inputVIN_Client').value.trim().toUpperCase();
-            const pin1 = document.getElementById('inputPIN_Securitate').value.trim();
-            const pin2 = document.getElementById('inputPIN_Confirmare').value.trim();
+       window.genereazaCodQRWeb = function() {
+    const vinInput = document.getElementById('inputVIN_Client').value.trim().toUpperCase();
+    const pin1 = document.getElementById('inputPIN_Securitate').value.trim();
+    const pin2 = document.getElementById('inputPIN_Confirmare').value.trim();
 
-            if(vinInput.length !== 17) { alert("VIN-ul trebuie să aibă fix 17 caractere!"); return; }
-            if(pin1.length !== 4 || isNaN(pin1)) { alert("PIN-ul de securitate trebuie să fie compus din 4 cifre!"); return; }
-            if(pin1 !== pin2) { alert("Codurile PIN introduse nu coincid!"); return; }
+    if(vinInput.length !== 17) { alert("VIN-ul trebuie să aibă fix 17 caractere!"); return; }
+    if(pin1.length !== 4 || isNaN(pin1)) { alert("PIN-ul de securitate trebuie să fie compus din 4 cifre!"); return; }
+    if(pin1 !== pin2) { alert("Codurile PIN introduse nu coincid!"); return; }
 
-            set(ref(db, `Masini/${vinInput}/pin`), pin1).then(() => {
-                vinCurentQR = vinInput;
-                const containerQrImg = document.getElementById('imgQRCode');
-                containerQrImg.innerHTML = "";
-                
-                const textLinkFinal = `https://carid-eae71.web.app/?vin=${vinInput}`;
+    set(ref(db, `Masini/${vinInput}/pin`), pin1).then(() => {
+        vinCurentQR = vinInput;
+        const containerQrImg = document.getElementById('imgQRCode');
+        containerQrImg.innerHTML = "";
+        
+        // Preluăm ID-ul unicat al garajului de pe acest telefon (sau generăm unul pe loc dacă nu există)
+        let deviceId = localStorage.getItem('carid_device_token');
+        if (!deviceId) {
+            deviceId = 'dev_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+            localStorage.setItem('carid_device_token', deviceId);
+        }
+        
+        // Adăugăm parametrul &gid în link-ul salvat în codul QR
+        const textLinkFinal = `https://carid-eae71.web.app/?vin=${vinInput}&gid=${deviceId}`;
 
-                new QRCode(containerQrImg, {
-                    text: textLinkFinal,
-                    width: 256,
-                    height: 256,
-                    correctLevel: QRCode.CorrectLevel.H
-                });
+        new QRCode(containerQrImg, {
+            text: textLinkFinal,
+            width: 256,
+            height: 256,
+            correctLevel: QRCode.CorrectLevel.H
+        });
+        
+        // Deschide modalul sau secțiunea unde se afișează QR-ul (dacă ai cod după)
+        // De exemplu, dacă mai aveai linii sub codul tău, asigură-te că le lași acolo!
+    });
+};
 
                 setTimeout(() => {
                     const imgQrElement = containerQrImg.querySelector('img');
