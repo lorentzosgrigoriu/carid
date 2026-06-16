@@ -442,4 +442,11 @@ if ('serviceWorker' in navigator) {
             .then(reg => console.log('CarID PWA: Service Worker înregistrat cu succes! Domeniu:', reg.scope))
             .catch(err => console.error('CarID PWA: Eroare la înregistrarea Service Worker-ului:', err));
     });
+    window.deschideGhidUlei = function() {
+    // Deschidem într-un tab nou pentru a păstra aplicația activă
+    window.open("https://www.liqui-moly.com/en/service/oil-guide.html", '_blank', 'noopener,noreferrer');
+    
+    // Opțional: O notificare care să reamintească mecanicului să salveze datele
+    alert("Te-am direcționat către ghidul oficial.\n\nDupă ce ai aflat specificațiile (ulei/anvelope), copiază-le și revino în aplicație pentru a le salva în 'Specificații Tehnice'!");
+};
 }
