@@ -184,9 +184,10 @@
 
             <div id="sectiune-tehnica" style="margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 8px; border: 1px dashed #1565C0;">
     <p style="font-size: 13px; color: #555; margin-bottom: 8px;"><b>Ai nevoie de date tehnice?</b></p>
-    <button onclick="deschideGhidUlei()" style="width: 100%; background: #1565C0; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
-        📖 Deschide Ghid Liqui Moly
-    </button>
+   <button onclick="deschideGhidUlei(); setTimeout(deschideModalInvatare, 3000);" 
+        style="background: #1565C0; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer;">
+    📖 Caută specificații și salvează
+</button>
 </div>
 
             <div id="layoutMecanic" class="card" style="display:none; border-top:4px solid #37474F; margin-top:15px;">
@@ -1118,5 +1119,16 @@
             }
         });
     </script>
+    <div id="modalInvatare" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
+    <div style="background:white; padding:20px; border-radius:10px; width:90%; max-width:400px;">
+        <h3 style="margin-top:0;">Salvează date tehnice</h3>
+        <input type="text" id="modalUlei" placeholder="Normă Ulei (ex: 5W30)" style="width:100%; padding:10px; margin:5px 0; box-sizing:border-box;">
+        <input type="text" id="modalAnvelope" placeholder="Dimensiuni Anvelope" style="width:100%; padding:10px; margin:5px 0; box-sizing:border-box;">
+        <div style="display:flex; gap:10px; margin-top:15px;">
+            <button onclick="inchideModalInvatare()" style="flex:1; padding:10px;">Anulează</button>
+            <button onclick="salveazaSiInchide()" style="flex:1; padding:10px; background:#1565C0; color:white; border:none;">Salvează în DB</button>
+        </div>
+    </div>
+</div>
 </body>
 </html>
