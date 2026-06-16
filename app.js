@@ -448,5 +448,27 @@ if ('serviceWorker' in navigator) {
     
     // Opțional: O notificare care să reamintească mecanicului să salveze datele
     alert("Te-am direcționat către ghidul oficial.\n\nDupă ce ai aflat specificațiile (ulei/anvelope), copiază-le și revino în aplicație pentru a le salva în 'Specificații Tehnice'!");
+window.deschideModalInvatare = function() {
+    document.getElementById('modalInvatare').style.display = 'flex';
 };
+
+window.inchideModalInvatare = function() {
+    document.getElementById('modalInvatare').style.display = 'none';
+};
+
+window.salveazaSiInchide = function() {
+    const ulei = document.getElementById('modalUlei').value;
+    const anvelope = document.getElementById('modalAnvelope').value;
+    
+    // Salvăm în nodul specific mașinii curente (vinCurent)
+    set(ref(db, `Masini/${vinCurent}/specificatii`), {
+        ulei: ulei,
+        anvelope: anvelope,
+        invatatLa: new Date().toLocaleDateString()
+    }).then(() => {
+        alert("Date salvate cu succes în CarID!");
+        inchideModalInvatare();
+    });
+};
+    };
 }
