@@ -460,30 +460,31 @@
             }
         };
 
-        window.proceseazaCodScanat = function(textScanat) {
-    let inputCurat = textScanat.trim();
+       window.proceseazaCodScanat = function(textScanat) {
+    let inputCurat = textScanat.trim().toUpperCase();
     
-    // --- CAZUL 1: E codul TĂU fizic (CRD-XXXXX) ---
+    // --- 1. Dacă este codul tău nou (CRD-) ---
     if (inputCurat.startsWith("CRD-")) {
         opresteScanner();
-        // Căutăm în baza de date dacă e deja asociat unui VIN
-        verificăCodInCloud(inputCurat).then(vinGasit => {
-            if (vinGasit) {
-                deschideDetalii(vinGasit);
+        // Căutăm VIN-ul asociat în baza de date
+        get(ref(db, `CoduriMapate/${inputCurat}`)).then((snapshot) => {
+            if (snapshot.exists()) {
+                // Avem VIN-ul! Îl trimitem la funcția care afișează detaliile
+                let vinGasit = snapshot.val().vin;
+                deschideDetalii(vinGasit); 
             } else {
-                if (confirm("Cod CarID original detectat. Vrei să-l asociezi cu o mașină nouă?")) {
-                    window.navigateTo('inregistrare-page');
-                    document.getElementById('inputCodQR').value = inputCurat;
-                } else {
-                    pornesteScanner();
-                }
+                // Cod nou, neînregistrat
+                alert("Cod CarID detectat. Trebuie să înregistrezi mașina pentru acest cod.");
+                window.navigateTo('inregistrare-page');
+                // Trimitem codul în pagină pentru a-l salva ulterior
+                document.getElementById('inputCodQR').value = inputCurat;
             }
         });
         return;
     }
 
-    // --- CAZUL 2: Este un cod de tip VIN (generat sau vechi) ---
-    // Aici păstrăm logica ta originală pentru a nu strica ce ai deja
+    // --- 2. Dacă este un VIN standard (cod vechi sau generat) ---
+    // Aici păstrăm logica ta actuală care extrage VIN-ul
     let vinCurat = inputCurat;
     if (vinCurat.includes("?vin=")) {
         const urlParams = new URLSearchParams(vinCurat.substring(vinCurat.indexOf('?')));
@@ -491,17 +492,13 @@
     } else if (vinCurat.startsWith("VIN:")) {
         vinCurat = vinCurat.replace("VIN:", "").trim();
     }
-    vinCurat = vinCurat.toUpperCase();
 
+    // Dacă am extras cu succes un VIN de 17 caractere
     if (vinCurat.length === 17) {
         opresteScanner();
-        if (esteProprietarMod) {
-            let vreaSalvare = confirm(`Vehicul detectat (${vinCurat})!\n\nDorești să-l salvezi?`);
-            if (vreaSalvare) salveazaInGarajLocal(vinCurat);
-        }
-        deschideDetalii(vinCurat);
+        deschideDetalii(vinCurat); // Aici se întâmplă magia: afișează VIN-ul la fel ca înainte
     } else {
-        alert("Cod invalid: Nu este un cod CarID original și nici un VIN de 17 caractere.");
+        alert("Cod scanat invalid.");
     }
 };
 
