@@ -461,32 +461,49 @@
         };
 
         window.proceseazaCodScanat = function(textScanat) {
-            let vinCurat = textScanat.trim();
-            
-            if (vinCurat.includes("?vin=")) {
-                const urlParams = new URLSearchParams(vinCurat.substring(vinCurat.indexOf('?')));
-                vinCurat = urlParams.get('vin') || "";
-            } else if (vinCurat.startsWith("VIN:")) {
-                vinCurat = vinCurat.replace("VIN:", "").trim();
-            }
-            
-            vinCurat = vinCurat.toUpperCase();
-
-            if (vinCurat.length === 17) {
-                opresteScanner();
-                
-                if (esteProprietarMod) {
-                    let vreaSalvare = confirm(`🚗 Vehicul detectat (${vinCurat})!\n\nDorești să SALVEZI această mașină în Garajul tău pentru acces rapid viitor?`);
-                    if (vreaSalvare) {
-                        salveazaInGarajLocal(vinCurat);
-                    }
-                }
-                
-                deschideDetalii(vinCurat);
+    let inputCurat = textScanat.trim();
+    
+    // --- CAZUL 1: E codul TĂU fizic (CRD-XXXXX) ---
+    if (inputCurat.startsWith("CRD-")) {
+        opresteScanner();
+        // Căutăm în baza de date dacă e deja asociat unui VIN
+        verificăCodInCloud(inputCurat).then(vinGasit => {
+            if (vinGasit) {
+                deschideDetalii(vinGasit);
             } else {
-                alert("Codul QR scanat nu conține un VIN valid de 17 caractere!");
+                if (confirm("Cod CarID original detectat. Vrei să-l asociezi cu o mașină nouă?")) {
+                    window.navigateTo('inregistrare-page');
+                    document.getElementById('inputCodQR').value = inputCurat;
+                } else {
+                    pornesteScanner();
+                }
             }
-        };
+        });
+        return;
+    }
+
+    // --- CAZUL 2: Este un cod de tip VIN (generat sau vechi) ---
+    // Aici păstrăm logica ta originală pentru a nu strica ce ai deja
+    let vinCurat = inputCurat;
+    if (vinCurat.includes("?vin=")) {
+        const urlParams = new URLSearchParams(vinCurat.substring(vinCurat.indexOf('?')));
+        vinCurat = urlParams.get('vin') || "";
+    } else if (vinCurat.startsWith("VIN:")) {
+        vinCurat = vinCurat.replace("VIN:", "").trim();
+    }
+    vinCurat = vinCurat.toUpperCase();
+
+    if (vinCurat.length === 17) {
+        opresteScanner();
+        if (esteProprietarMod) {
+            let vreaSalvare = confirm(`Vehicul detectat (${vinCurat})!\n\nDorești să-l salvezi?`);
+            if (vreaSalvare) salveazaInGarajLocal(vinCurat);
+        }
+        deschideDetalii(vinCurat);
+    } else {
+        alert("Cod invalid: Nu este un cod CarID original și nici un VIN de 17 caractere.");
+    }
+};
 
         function salveazaInGarajLocal(vin) {
             try {
