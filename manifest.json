@@ -2,6 +2,13 @@
   "short_name": "CarID",
   "name": "CarID - Garajul Tău Digital",
   "description": "Istoric service digital securizat pe bază de cod QR",
+  "id": "/",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1A237E",
+  "theme_color": "#1A237E",
   "icons": [
     {
       "src": "logo.png",
@@ -21,10 +28,5 @@
       "sizes": "192x192",
       "purpose": "maskable"
     }
-  ],
-  "start_url": "./index.html",
-  "background_color": "#1A237E",
-  "theme_color": "#1A237E",
-  "display": "standalone",
-  "orientation": "portrait"
+  ]
 }
