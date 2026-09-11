@@ -9,8 +9,10 @@
     <meta name="theme-color" content="#1565C0">
     <link rel="apple-touch-icon" href="logo.png">
 
+    <!-- Librării Externe -->
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
         /* Stiluri de baza si resetare generala */
@@ -93,7 +95,7 @@
 </head>
 <body>
 
-    <!-- HOME PAGE -->
+    <!-- ECRAN PRINCIPAL -->
     <div id="home-page" class="page active">
         <img src="logo.png" alt="CarID Logo" class="app-logo" onerror="this.style.display='none';">
         
@@ -113,7 +115,7 @@
         </div>
     </div>
 
-    <!-- INREGISTRARE PAGE -->
+    <!-- ECRAN INREGISTRARE -->
     <div id="inregistrare-page" class="page">
         <div style="display:flex; align-items:center; margin-bottom:15px;">
             <button onclick="navigateTo('home-page')" style="width:auto; margin:0; padding:8px 15px;">⬅️ Inapoi</button>
@@ -121,9 +123,8 @@
         </div>
 
         <div class="card" style="margin-top:10px;">
-            <!-- Camp ascuns pentru mapare coduri noi QR (CRD-) -->
             <input type="hidden" id="inputCodQR">
-
+            
             <label>Serie Sasiu / VIN (17 caractere) *</label>
             <input type="text" id="inputVIN_Client" maxlength="17" style="font-family:monospace; text-transform:uppercase;" placeholder="WVWZZZ1KZGM......">
 
@@ -140,7 +141,7 @@
             <h4>Codul tau a fost securizat si generat!</h4>
             <div id="imgQRCode" style="background:#FFF; padding:10px; border-radius:6px; max-width:280px; width:100%;"></div>
 
-            <button class="btn-primary" style="background:#2E7D32; margin-top:10px;" onclick="salveazaInGalerieWeb()">
+            <button class="btn-primary" style="background:#2E7D32; margin-top:15px;" onclick="salveazaInGalerieWeb()">
                 📥 Descarca Imaginea (PNG)
             </button>
             
@@ -150,7 +151,7 @@
         </div>
     </div>
 
-    <!-- GARAJ PAGE -->
+    <!-- ECRAN GARAJ -->
     <div id="garaj-page" class="page">
         <div style="display:flex; align-items:center; margin-bottom:15px;">
             <button onclick="navigateTo('home-page')" style="width:auto; margin:0; padding:8px 15px;">⬅️ Inapoi</button>
@@ -160,7 +161,7 @@
         <div id="lista-garaj"></div>
     </div>
 
-    <!-- DETAILS PAGE -->
+    <!-- ECRAN DETALII MASINA -->
     <div id="details-page" class="page">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
             <button onclick="navigateTo('home-page')" style="width:auto; margin:0; padding:8px 15px;">⬅️ Inapoi</button>
@@ -201,7 +202,7 @@
                 <div style="display:flex; gap:10px;">
                     <div style="flex:1;">
                         <label>Kilometraj curent (KM) *</label>
-                        <input type="number" id="inputKM" placeholder="Ex: 184500">
+                        <input type="number" id="inputKM" placeholder="Ex: 184500" oninput="window.calculAutocompletareRevizie()">
                     </div>
                     <div style="flex:1;">
                         <label>Data Intervenției *</label>
@@ -253,7 +254,7 @@
         </div>
     </div>
 
-    <!-- MODAL ISTORIC (POP-UP) -->
+    <!-- POP-UP ISTORIC -->
     <div id="modalIstoricOverlay" onclick="inchideModalIstoric()"></div>
     <div id="modalIstoric">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #EEE; padding-bottom:10px; margin-bottom:15px;">
@@ -267,7 +268,7 @@
         <button class="btn-secondary" style="margin-top:15px;" onclick="inchideModalIstoric()">Închide</button>
     </div>
 
-    <!-- GHID PAGE -->
+    <!-- GHID UTILIZARE -->
     <div id="ghid-page" class="page">
         <div style="display:flex; align-items:center; margin-bottom:15px;">
             <button onclick="navigateTo('home-page')" style="width:auto; margin:0; padding:8px 15px;">⬅️ Înapoi</button>
@@ -295,7 +296,7 @@
         </div>
     </div>
     
-    <!-- MENIURI SI DRAWER -->
+    <!-- MENIURI -->
     <div id="drawerOverlay" onclick="toggleDrawer(false)"></div>
     <div id="drawerMenu">
         <img src="logo.png" alt="CarID Logo" style="display:block; margin: 0 auto 10px auto; max-width: 80px; height: auto;" onerror="this.style.display='none';">
@@ -322,12 +323,12 @@
         <button class="btn-primary" style="background:#C62828; margin-top:15px;" onclick="lockMeniuActiuni()">Închide Meniu</button>
     </div>
 
-    <!-- BUTON FLOATING MENIU -->
+    <!-- BUTON Meniu Meniu Mobil -->
     <div style="position:fixed; bottom:20px; right:20px; z-index:900;">
         <button onclick="toggleDrawer(true)" style="width:55px; height:55px; border-radius:50%; background:#1565C0; color:white; font-size:24px; display:flex; align-items:center; justify-content:center; padding:0; margin:0;">☰</button>
     </div>
 
-    <!-- MODAL POP-UP SALVARE DATE TEHNICE -->
+    <!-- MODAL SPECIFICATII TEHNICE -->
     <div id="modalInvatare" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:3000; justify-content:center; align-items:center;">
         <div style="background:white; padding:20px; border-radius:10px; width:90%; max-width:400px; box-shadow:0 4px 15px rgba(0,0,0,0.3);">
             <h3 style="margin-top:0; color:#1565C0;">Salvează date tehnice</h3>
@@ -344,7 +345,7 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT LOGIC -->
+    <!-- HELPER MODAL ISTORIC -->
     <script>
         function deschideModalIstoric() {
             const istoricOriginal = document.getElementById('istoric-lucrari-container');
@@ -372,7 +373,7 @@
         }
     </script>
 
-    <!-- INCLUDERE LOGICĂ PRINCIPALĂ DIN SCRIPT -->
-    <script type="module" src="app.js"></script>
+    <!-- INCARCARE LOGICĂ APLICAȚIE DIN APP.JS -->
+    <script src="app.js"></script>
 </body>
 </html>
