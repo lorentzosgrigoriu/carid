@@ -1,13 +1,18 @@
-const CACHE_NAME = 'carid-v2'; // Schimbat la v2 pentru a forța actualizarea
+const CACHE_NAME = 'carid-v3'; // Schimbat la v3 pentru a forța actualizarea aplicației
+
 const ASSETS = [
   './',
   './index.html',
   './app.js',
   './manifest.json',
-  './logo.png'
+  './logo.png',
+  // Librării externe salvate în cache pentru acces offline în garaj
+  'https://unpkg.com/html5-qrcode',
+  'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js',
+  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'
 ];
 
-// Instalare Service Worker și salvare inițială în Cache
+// Instalare Service Worker și salvare resurse în Cache
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
@@ -16,7 +21,7 @@ self.addEventListener('install', e => {
   );
 });
 
-// Activare și curățare cache-uri vechi (șterge automat carid-v1)
+// Activare și curățare versiuni vechi de cache (șterge v1/v2)
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys => {
@@ -31,14 +36,12 @@ self.addEventListener('activate', e => {
   );
 });
 
-// Strategia Network-First: prioritizează internetul, folosește cache-ul doar offline
+// Strategia Network-First: prioritizează internetul, folosește cache doar offline
 self.addEventListener('fetch', e => {
-  // Ignoră cererile către serverele live Firebase (Auth, Firestore, Realtime Database)
+  // Ignoră cererile live către baza de date Supabase (să nu le blocheze din cache)
   if (
-    e.request.url.includes('firebase') || 
-    e.request.url.includes('firestore') || 
-    e.request.url.includes('firebasedatabase') ||
-    e.request.url.includes('gstatic.com')
+    e.request.url.includes('supabase.co') || 
+    e.request.url.includes('rest/v1')
   ) {
     return;
   }
@@ -46,7 +49,7 @@ self.addEventListener('fetch', e => {
   e.respondWith(
     fetch(e.request)
       .then(networkResponse => {
-        // Dacă cererea de pe net a reușit, salvăm copia proaspătă în cache pentru când nu va fi semnal
+        // Dacă cererea de pe rețea a reușit, salvăm o copie proaspătă în cache
         if (networkResponse && networkResponse.status === 200 && e.request.method === 'GET') {
           const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then(cache => {
@@ -56,7 +59,7 @@ self.addEventListener('fetch', e => {
         return networkResponse;
       })
       .catch(() => {
-        // Dacă netul pică (ești în garaj/sub mașină), încarcă instant din cache ce s-a salvat anterior
+        // Dacă nu există conexiune la internet, deschide resursele din cache
         return caches.match(e.request);
       })
   );
