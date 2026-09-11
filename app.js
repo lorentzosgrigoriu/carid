@@ -21,13 +21,12 @@ let listaLucrariCompleta = [];
 let canvasFinalPentruSalvare = null;
 let vinCurentQR = "";
 
-// Helper inteligent: elimina diacriticele si face textul cu litere mici pentru comparare rapida
+// Helper: eliminare diacritice și conversie la litere mici
 const normalizeazaText = (text) => {
     if (!text) return "";
     return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 };
 
-// Sugestii curatate complet de diacritice pentru utilizare rapida
 const SUGESTII_LUCRARI = [
     "Revizie completa (Ulei + 4 filtre)", "Schimb ulei motor", "Schimb filtru ulei", "Schimb filtru aer", "Schimb filtru habitaclu (polen)", "Schimb filtru combustibil", "Schimb lichid de frana", "Schimb antigel / Curatare instalatie", "Schimb ulei cutie de viteze manuala", "Schimb ulei cutie automata (Metoda prin cadere)", "Schimb ulei cutie automata (Aparat / Dinamic)", "Schimb ulei diferential", "Schimb ulei cutie de transfer (4x4)", "Resetare interval service / Ulei",
     "Schimb placute frana fata", "Schimb placute frana spate", "Schimb discuri si placute frana fata", "Schimb discuri si placute frana spate", "Schimb lichid frana + Aerisire sistem", "Schimb etrier frana", "Reconditionare etrier (Garnituri + Piston)", "Schimb cablu frana de mana", "Reglaj frana de mana", "Schimb senzori uzura placute", "Schimb furtunuri frana (flexibile)", "Schimb pompa centrala di frana",
@@ -89,12 +88,12 @@ window.proceseazaCodScanat = function(textScanat) {
     if (vinCurat.length === 17) {
         opresteScanner();
         if (esteProprietarMod) {
-            let vreaSalvare = confirm(`🚗 Vehicul detectat (${vinCurat})!\n\nDoresti sa SALVEZI aceasta masina in Garajul tau?`);
+            let vreaSalvare = confirm(`🚗 Vehicul detectat (${vinCurat})!\n\nDorești să SALVEZI această mașină în Garajul tău?`);
             if (vreaSalvare) salveazaInGarajLocal(vinCurat);
         }
         deschideDetalii(vinCurat);
     } else {
-        alert("Codul QR nu contine un VIN valid!");
+        alert("Codul QR nu conține un VIN valid!");
     }
 };
 
@@ -115,7 +114,7 @@ function incarcaGarajLocal() {
     let garaj = JSON.parse(localStorage.getItem('garaj_carid')) || [];
 
     if (garaj.length === 0) {
-        containerGaraj.innerHTML = `<p style="color:#757575; font-style:italic; text-align:center; margin-top:15px;">Nicio masina salvata in garaj.</p>`;
+        containerGaraj.innerHTML = `<p style="color:#757575; font-style:italic; text-align:center; margin-top:15px;">Nicio mașină salvată în garaj.</p>`;
         return;
     }
 
@@ -139,7 +138,7 @@ function incarcaGarajLocal() {
 }
 
 window.stergeDinGaraj = function(vin) {
-    if (confirm(`Stergi masina ${vin}?`)) {
+    if (confirm(`Ștergi mașina ${vin}?`)) {
         let garaj = JSON.parse(localStorage.getItem('garaj_carid')) || [];
         garaj = garaj.filter(item => item !== vin);
         localStorage.setItem('garaj_carid', JSON.stringify(garaj));
@@ -192,7 +191,6 @@ function incarcaIstoric() {
                 l.id = child.key;
                 listaLucrariCompleta.push(l);
             });
-            // Sortare inteligenta care elimina caracterele non-numerice (ex: spatii, puncte) inainte de sortare
             listaLucrariCompleta.sort((a, b) => {
                 const kmA = parseInt(String(a.km).replace(/\D/g, '')) || 0;
                 const kmB = parseInt(String(b.km).replace(/\D/g, '')) || 0;
@@ -207,6 +205,7 @@ function incarcaIstoric() {
 window.filtreazaLucrari = function(query) {
     const q = normalizeazaText(query);
     const container = document.getElementById('istoric-lucrari-container');
+    if (!container) return;
     container.innerHTML = "";
     
     const filtrate = listaLucrariCompleta.filter(l => 
@@ -282,7 +281,7 @@ window.salveazaLucrareNoua = function() {
     const urmatoareData = document.getElementById('inputUrmatoareaData').value.trim();
     const obs = document.getElementById('inputObservatii').value.trim();
 
-    if (!km || !desc) { alert("Kilometrii si Tipul interventiei sunt obligatorii!"); return; }
+    if (!km || !desc) { alert("Kilometrii și Tipul intervenției sunt obligatorii!"); return; }
     if (desc.length > 0) desc = desc.charAt(0).toUpperCase() + desc.slice(1);
     const costTotalStr = (costP + costM).toString();
     const dataAzi = new Date().toLocaleDateString('ro-RO');
@@ -290,7 +289,7 @@ window.salveazaLucrareNoua = function() {
     const nouaLucrare = { km, descriere: desc, piese, cost: costTotalStr, urmatorKm, urmatoareaData, observatii: obs, data: dataAzi };
     
     push(ref(db, `Masini/${vinCurent}/lucrari`), nouaLucrare).then(() => {
-        alert("Lucrare salvata cu succes!");
+        alert("Lucrare salvată cu succes!");
         document.getElementById('inputKM').value = ""; document.getElementById('inputDescriere').value = ""; document.getElementById('inputPiese').value = "";
         document.getElementById('inputCostPiese').value = ""; document.getElementById('inputCostManopera').value = ""; document.getElementById('inputUrmatorKm').value = "";
         document.getElementById('inputUrmatoareaData').value = ""; document.getElementById('inputObservatii').value = "";
@@ -301,17 +300,18 @@ window.salveazaLucrareNoua = function() {
 };
 
 window.stergeLucrare = function(id) {
-    if (confirm("Sigur stergi inregistrarea?")) remove(ref(db, `Masini/${vinCurent}/lucrari/${id}`)).then(() => incarcaIstoric());
+    if (confirm("Sigur ștergi înregistrarea?")) remove(ref(db, `Masini/${vinCurent}/lucrari/${id}`)).then(() => incarcaIstoric());
 };
 
 function actualizeazaSemafor() {
     const semafor = document.getElementById('cardStatus');
     const txt = document.getElementById('tvStatusRevizie');
+    if (!semafor || !txt) return;
     if (listaLucrariCompleta.length > 0) {
         semafor.style.backgroundColor = "#4CAF50";
         txt.innerText = `Sisteme Verificate. Ultima revizie: ${listaLucrariCompleta[0].km} KM`;
     } else {
-        semafor.style.backgroundColor = "#FF6D00"; txt.innerText = "Nicio lucrare inregistrata in istoric.";
+        semafor.style.backgroundColor = "#FF6D00"; txt.innerText = "Nicio lucrare înregistrată în istoric.";
     }
 }
 
@@ -320,6 +320,7 @@ window.deschideMeniuActiuni = function() {
     document.getElementById('actionMenuOverlay').style.display = 'block';
     document.getElementById('optiuni-proprietar-web').style.display = esteProprietarMod ? 'block' : 'none';
 };
+
 window.lockMeniuActiuni = function() {
     document.getElementById('actionSheetMenu').style.display = 'none';
     document.getElementById('actionMenuOverlay').style.display = 'none';
@@ -330,32 +331,36 @@ window.afiseazaStatusDocument = function(tip) {
     inchideMeniuActiuni();
     const docRef = ref(db, `Masini/${vinCurent}/documente/${tip}`);
     get(docRef).then((snap) => {
-        const dataC = snap.exists() ? snap.val() : "Nesetata";
-        let nouaD = prompt(`📋 ${tip.toUpperCase()}\nExpira la: ${dataC}\nNoua data (DD.MM.YYYY):`, dataC);
-        if (nouaD) set(docRef, nouaD.trim()).then(() => alert("Data salvata!"));
+        const dataC = snap.exists() ? snap.val() : "Nesetată";
+        let nouaD = prompt(`📋 ${tip.toUpperCase()}\nExpiră la: ${dataC}\nNoua dată (DD.MM.YYYY):`, dataC);
+        if (nouaD) set(docRef, nouaD.trim()).then(() => alert("Dată salvată!"));
     });
 };
 
 window.afiseazaSpecificatiiWeb = function() {
     inchideMeniuActiuni();
-    const specsRef = ref(db, `Masini/${vinCurent}/specs`);
+    const specsRef = ref(db, `Masini/${vinCurent}/specificatii`);
     get(specsRef).then((snap) => {
-        let u = snap.child("ulei").val() || "", a = snap.child("anvelope").val() || "";
-        let nouU = prompt("Tip Ulei recomandat:", u), nouA = prompt("Dimensiuni Anvelope:", a);
-        if (nouU !== null || nouA !== null) set(specsRef, { ulei: nouU || u, anvelope: nouA || a }).then(() => alert("Salvat!"));
+        let u = snap.child("ulei").val() || "Nespecificat", a = snap.child("anvelope").val() || "Nespecificat";
+        if (!esteProprietarMod) {
+            let nouU = prompt("Tip Ulei recomandat:", u), nouA = prompt("Dimensiuni Anvelope:", a);
+            if (nouU !== null || nouA !== null) set(specsRef, { ulei: nouU || u, anvelope: nouA || a }).then(() => alert("Salvat!"));
+        } else {
+            alert(`⚙️ Specificații Tehnice:\n\n🛢️ Ulei Motor: ${u}\n🚗 Anvelope: ${a}`);
+        }
     });
 };
 
 window.deschideCalculatorConsum = function() {
     inchideMeniuActiuni();
-    let litri = parseFloat(prompt("Litri alimentati:")), km = parseFloat(prompt("Kilometri parcursi:"));
+    let litri = parseFloat(prompt("Litri alimentați:")), km = parseFloat(prompt("Kilometri parcurși:"));
     if (litri && km) alert(`🧮 Consum mediu: ${((litri / km) * 100).toFixed(2)} L/100km`);
 };
 
 window.partajeazaVinWeb = function() {
     inchideMeniuActiuni();
     if (navigator.share) navigator.share({ title: 'CarID', text: `VIN: ${vinCurent}` });
-    else prompt("Copiati VIN-ul:", vinCurent);
+    else prompt("Copiați VIN-ul:", vinCurent);
 };
 
 window.genereazaCodQRWeb = function() {
@@ -363,7 +368,7 @@ window.genereazaCodQRWeb = function() {
     const pin = document.getElementById('inputPIN_Securitate').value.trim();
     const conf = document.getElementById('inputPIN_Confirmare').value.trim();
 
-    if (vin.length !== 17 || pin.length !== 4 || pin !== conf) { alert("Verifica VIN (17 caractere) si PIN (4 cifre)!"); return; }
+    if (vin.length !== 17 || pin.length !== 4 || pin !== conf) { alert("Verifică VIN (17 caractere) și PIN (4 cifre)!"); return; }
 
     vinCurentQR = vin;
     set(ref(db, `Masini/${vin}/pin`), pin).then(() => {
@@ -407,12 +412,48 @@ window.salveazaInGalerieWeb = function() {
 
 window.partajeazaQRWeb = function() {
     if (!canvasFinalPentruSalvare) return;
-    const msg = `🚗 Codul tau digital CarID pentru VIN: ${vinCurentQR}`;
+    const msg = `🚗 Codul tău digital CarID pentru VIN: ${vinCurentQR}`;
     canvasFinalPentruSalvare.toBlob((blob) => {
         const f = new File([blob], "share_qr.png", { type: "image/png" });
         if (navigator.canShare && navigator.canShare({ files: [f] })) navigator.share({ files: [f], title: "CarID QR", text: msg });
-        else alert("Salvati imaginea si trimiteti-o manual!");
+        else alert("Salvați imaginea și trimiteți-o manual!");
     });
+};
+
+window.deschideGhidUlei = function() {
+    window.open("https://www.liqui-moly.com/en/service/oil-guide.html", '_blank', 'noopener,noreferrer');
+    alert("Te-am direcționat către ghidul oficial.\n\nDupă ce ai aflat specificațiile (ulei/anvelope), copiază-le și revino în aplicație pentru a le salva!");
+};
+
+window.deschideModalInvatare = function() {
+    document.getElementById('modalInvatare').style.display = 'flex';
+};
+
+window.inchideModalInvatare = function() {
+    document.getElementById('modalInvatare').style.display = 'none';
+};
+
+window.salveazaSiInchide = function() {
+    if (!vinCurent) {
+        alert("Niciun VIN activ selectat!");
+        return;
+    }
+    const ulei = document.getElementById('modalUlei').value.trim();
+    const anvelope = document.getElementById('modalAnvelope').value.trim();
+    
+    if (!ulei && !anvelope) {
+        alert("Completati cel putin un camp!");
+        return;
+    }
+
+    set(ref(db, `Masini/${vinCurent}/specificatii`), {
+        ulei: ulei,
+        anvelope: anvelope,
+        invatatLa: new Date().toLocaleDateString('ro-RO')
+    }).then(() => {
+        alert("Date salvate cu succes în CarID!");
+        inchideModalInvatare();
+    }).catch(e => alert("Eroare la salvare: " + e.message));
 };
 
 function verificaDacaVineDinScanareDirecta() {
@@ -428,47 +469,14 @@ function verificaDacaVineDinScanareDirecta() {
     }
 }
 
-// ==========================================
-// EXECUTIE INIȚIALĂ ȘI SUPORT PWA
-// ==========================================
+// Execuție inițială și PWA
 verificaDacaVineDinScanareDirecta();
 window.initializeazaAutocompleteDescriere();
 
-// Înregistrarea Service Worker-ului pentru funcționarea Offline și instalare PWA
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        // Observă că am scos '/'-ul din fața lui sw.js pentru compatibilitate cu GitHub Pages
         navigator.serviceWorker.register('sw.js')
             .then(reg => console.log('CarID PWA: Service Worker înregistrat cu succes! Domeniu:', reg.scope))
             .catch(err => console.error('CarID PWA: Eroare la înregistrarea Service Worker-ului:', err));
     });
-    window.deschideGhidUlei = function() {
-    // Deschidem într-un tab nou pentru a păstra aplicația activă
-    window.open("https://www.liqui-moly.com/en/service/oil-guide.html", '_blank', 'noopener,noreferrer');
-    
-    // Opțional: O notificare care să reamintească mecanicului să salveze datele
-    alert("Te-am direcționat către ghidul oficial.\n\nDupă ce ai aflat specificațiile (ulei/anvelope), copiază-le și revino în aplicație pentru a le salva în 'Specificații Tehnice'!");
-window.deschideModalInvatare = function() {
-    document.getElementById('modalInvatare').style.display = 'flex';
-};
-
-window.inchideModalInvatare = function() {
-    document.getElementById('modalInvatare').style.display = 'none';
-};
-
-window.salveazaSiInchide = function() {
-    const ulei = document.getElementById('modalUlei').value;
-    const anvelope = document.getElementById('modalAnvelope').value;
-    
-    // Salvăm în nodul specific mașinii curente (vinCurent)
-    set(ref(db, `Masini/${vinCurent}/specificatii`), {
-        ulei: ulei,
-        anvelope: anvelope,
-        invatatLa: new Date().toLocaleDateString()
-    }).then(() => {
-        alert("Date salvate cu succes în CarID!");
-        inchideModalInvatare();
-    });
-};
-    };
 }
